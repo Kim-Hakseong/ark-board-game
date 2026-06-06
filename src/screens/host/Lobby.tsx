@@ -9,9 +9,10 @@ interface LobbyProps {
   joinUrl: string;
   onTestStart?: () => void;
   showTestStart?: boolean;
+  onKick?: (playerId: string) => void;
 }
 
-export function Lobby({ state, joinUrl, onTestStart, showTestStart }: LobbyProps) {
+export function Lobby({ state, joinUrl, onTestStart, showTestStart, onKick }: LobbyProps) {
   const canStart = state.players.length >= 2;
   // 갤러리 슬롯: 입장 인원 ≤ 10이면 10슬롯, 그 외엔 인원에 맞춰 늘림
   const slots = Math.max(10, state.players.length);
@@ -177,6 +178,9 @@ export function Lobby({ state, joinUrl, onTestStart, showTestStart }: LobbyProps
                     emoji={a?.emoji ?? "❓"}
                     name={p.name}
                     delay={i * 70}
+                    onKick={onKick ? () => {
+                      if (confirm(`${p.name}님을 내보낼까요?`)) onKick(p.id);
+                    } : undefined}
                   />
                 );
               })}
@@ -269,15 +273,51 @@ function CodeBox({
   );
 }
 
-function FriendStand({ emoji, name, delay }: { emoji: string; name: string; delay: number }) {
+function FriendStand({
+  emoji,
+  name,
+  delay,
+  onKick,
+}: {
+  emoji: string;
+  name: string;
+  delay: number;
+  onKick?: () => void;
+}) {
   return (
     <div
       style={{
         textAlign: "center",
         animation: "pop .5s var(--ease-pop) backwards",
         animationDelay: `${delay}ms`,
+        position: "relative",
       }}
     >
+      {onKick && (
+        <button
+          type="button"
+          onClick={onKick}
+          title="내보내기"
+          style={{
+            position: "absolute",
+            top: -4,
+            right: 8,
+            width: 28,
+            height: 28,
+            borderRadius: "50%",
+            background: "rgba(74,59,42,.7)",
+            color: "#fff",
+            border: "2px solid #fff",
+            fontSize: 16,
+            lineHeight: 1,
+            cursor: "pointer",
+            zIndex: 2,
+            boxShadow: "var(--sh-soft)",
+          }}
+        >
+          ×
+        </button>
+      )}
       <div
         style={{
           width: 124,

@@ -57,12 +57,34 @@ describe("logic/state — addPlayer / removePlayer", () => {
     expect(s.players.length).toBe(16);
   });
 
-  it("로비 외에는 추가/제거 거부", () => {
+  it("로비 외에는 추가 거부", () => {
     const s = setupGame(2);
     const s2 = addPlayer(s, { id: "p9", name: "Late", animalId: "z" });
     expect(s2.players.length).toBe(2);
-    const s3 = removePlayer(s, "p0");
-    expect(s3.players.length).toBe(2);
+  });
+
+  it("진행 중에도 removePlayer 동작 (currentTurnIdx 안전 조정)", () => {
+    let s = setupGame(3);
+    // currentTurnIdx = 0 (p0). p0 제거 → 다음 사람(p1)이 idx 0이 됨
+    s = removePlayer(s, "p0");
+    expect(s.players.map((p) => p.id)).toEqual(["p1", "p2"]);
+    expect(s.currentTurnIdx).toBe(0); // 0 % 2 = 0 (다음 사람)
+  });
+
+  it("진행 중 currentTurnIdx 이전 인덱스 제거 시 idx -1", () => {
+    let s = setupGame(3);
+    s = { ...s, currentTurnIdx: 2 };
+    s = removePlayer(s, "p0"); // idx 0 제거, currentTurnIdx 2 → 1
+    expect(s.currentTurnIdx).toBe(1);
+    expect(s.players.map((p) => p.id)).toEqual(["p1", "p2"]);
+  });
+
+  it("전원 제거 시 lobby로 복귀", () => {
+    let s = setupGame(2);
+    s = removePlayer(s, "p0");
+    s = removePlayer(s, "p1");
+    expect(s.players).toEqual([]);
+    expect(s.phase).toBe("lobby");
   });
 
   it("removePlayer 로비에서 동작", () => {

@@ -45,13 +45,60 @@ export function addPlayer(
   };
 }
 
+// 어떤 페이즈에서도 동작. 진행 중 제거 시 currentTurnIdx/quiz/activeCell 안전 cleanup.
 export function removePlayer(state: GameState, playerId: string): GameState {
-  if (state.phase !== "lobby") return state;
-  if (!state.players.some((p) => p.id === playerId)) return state;
+  const idx = state.players.findIndex((p) => p.id === playerId);
+  if (idx === -1) return state;
+  const newPlayers = state.players.filter((p) => p.id !== playerId);
+
+  // 전원 제거 → 로비로 복귀
+  if (newPlayers.length === 0) {
+    return {
+      ...state,
+      seq: state.seq + 1,
+      players: [],
+      phase: "lobby",
+      currentTurnIdx: 0,
+      activeCell: null,
+      quiz: null,
+      lastDiceRoll: null,
+    };
+  }
+
+  // currentTurnIdx 조정
+  let currentTurnIdx = state.currentTurnIdx;
+  if (idx < state.currentTurnIdx) {
+    currentTurnIdx = state.currentTurnIdx - 1;
+  } else if (idx === state.currentTurnIdx) {
+    // 그 자리에 다음 사람이 자동으로 옴 (wrap 처리)
+    currentTurnIdx = state.currentTurnIdx % newPlayers.length;
+  }
+
+  // 진행 중 퀴즈의 멈춘 자가 제거되면 퀴즈 취소
+  let quiz = state.quiz;
+  if (quiz) {
+    if (quiz.stoppedPlayerId === playerId) {
+      quiz = null;
+    } else {
+      const answers = { ...quiz.answers };
+      delete answers[playerId];
+      quiz = { ...quiz, answers };
+    }
+  }
+
+  // activeCell 트리거 플레이어가 제거되면 취소
+  let activeCell = state.activeCell;
+  if (activeCell && activeCell.triggeredByPlayerId === playerId) {
+    activeCell = null;
+  }
+
   return {
     ...state,
     seq: state.seq + 1,
-    players: state.players.filter((p) => p.id !== playerId),
+    players: newPlayers,
+    currentTurnIdx,
+    quiz,
+    activeCell,
   };
 }
 

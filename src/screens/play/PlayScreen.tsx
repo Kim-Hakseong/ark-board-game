@@ -98,9 +98,12 @@ function PlayInner({ roomCode, profile, onSetProfile }: PlayInnerProps) {
   );
 
   const handleReset = useCallback(() => {
+    if (profile && !profile.isTeacher) {
+      send({ type: "leave", playerId: profile.playerId });
+    }
     clearControllerProfile();
     onSetProfile(null);
-  }, [onSetProfile]);
+  }, [profile, send, onSetProfile]);
 
   if (!profile) {
     return <Entry roomCode={roomCode} state={state} onJoin={handleJoin} />;

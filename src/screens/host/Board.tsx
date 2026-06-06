@@ -7,6 +7,7 @@ import type { GameState, Player } from "../../logic/types";
 
 interface BoardProps {
   state: GameState;
+  onKick?: (playerId: string) => void;
 }
 
 // ────────────────────────────────────────────────────────────
@@ -75,7 +76,7 @@ const KIND_GLYPH: Record<CellKind, string> = {
 };
 
 // ────────────────────────────────────────────────────────────
-export function Board({ state }: BoardProps) {
+export function Board({ state, onKick }: BoardProps) {
   const currentPlayer = state.players[state.currentTurnIdx] ?? null;
 
   const trackPoints = useMemo(() => {
@@ -252,7 +253,7 @@ export function Board({ state }: BoardProps) {
         </div>
 
         {/* 우측 점수판 */}
-        <StatusPanel state={state} current={currentPlayer} />
+        <StatusPanel state={state} current={currentPlayer} onKick={onKick} />
       </div>
     </TvCanvas>
   );
@@ -597,9 +598,11 @@ function state_rain_overlay() {
 function StatusPanel({
   state,
   current,
+  onKick,
 }: {
   state: GameState;
   current: Player | null;
+  onKick?: (playerId: string) => void;
 }) {
   const animal = current ? getAnimal(current.animalId) : null;
   return (
@@ -833,6 +836,29 @@ function StatusPanel({
               >
                 🪙 {p.tokens}
               </div>
+              {onKick && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm(`${p.name}님을 내보낼까요?`)) onKick(p.id);
+                  }}
+                  title="내보내기"
+                  style={{
+                    width: 26,
+                    height: 26,
+                    flex: "none",
+                    borderRadius: "50%",
+                    background: "rgba(255,255,255,.15)",
+                    color: "#fff",
+                    border: "1px solid rgba(255,255,255,.4)",
+                    fontSize: 14,
+                    lineHeight: 1,
+                    cursor: "pointer",
+                  }}
+                >
+                  ×
+                </button>
+              )}
             </div>
           );
         })}

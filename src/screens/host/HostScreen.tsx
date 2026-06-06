@@ -100,12 +100,16 @@ export function HostScreen() {
           joinUrl={joinUrl}
           showTestStart={isMock}
           onTestStart={() => apply({ type: "phase", cmd: "start" })}
+          onKick={(playerId) => apply({ type: "leave", playerId })}
         />
       )}
 
       {(state.phase === "playing" || state.phase === "rain") && (
         <>
-          <Board state={state} />
+          <Board
+            state={state}
+            onKick={(playerId) => apply({ type: "leave", playerId })}
+          />
           {state.activeCell && cellReady && <CellOverlay state={state} />}
           {state.quiz && quizReady && (
             <QuizOverlay

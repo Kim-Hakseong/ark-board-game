@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ANIMALS } from "../../data/animals";
 import { generatePlayerId } from "../../lib/codes";
+import { MAX_PLAYERS } from "../../logic/state";
 import type { ControllerProfile } from "../../logic/storage";
 import type { GameState } from "../../logic/types";
 
@@ -20,7 +21,7 @@ export function Entry({ roomCode, state, onJoin }: EntryProps) {
   const [error, setError] = useState<string | null>(null);
 
   const takenAnimalIds = new Set(state?.players.map((p) => p.animalId) ?? []);
-  const lobbyFull = (state?.players.length ?? 0) >= 8;
+  const lobbyFull = (state?.players.length ?? 0) >= MAX_PLAYERS;
 
   const handleSubmit = () => {
     setError(null);
@@ -29,7 +30,7 @@ export function Entry({ roomCode, state, onJoin }: EntryProps) {
       if (!name.trim()) return setError("이름을 입력해주세요.");
       if (!animalId) return setError("동물을 골라주세요.");
       if (takenAnimalIds.has(animalId)) return setError("다른 친구가 먼저 골랐어요. 다시 선택해주세요.");
-      if (lobbyFull) return setError("정원이 다 찼어요 (최대 8명).");
+      if (lobbyFull) return setError(`정원이 다 찼어요 (최대 ${MAX_PLAYERS}명).`);
       if (state.phase !== "lobby") return setError("이미 게임이 시작되었어요.");
       const playerId = generatePlayerId();
       const profile: ControllerProfile = {
@@ -61,7 +62,7 @@ export function Entry({ roomCode, state, onJoin }: EntryProps) {
         <h1 className="font-display text-3xl">방주로 가는 길</h1>
         <p className="text-base opacity-70 mt-1">
           방 코드 <span className="font-display text-ark-gold">{roomCode}</span>
-          {state ? ` · 입장 ${state.players.length}/8` : " · 연결 중…"}
+          {state ? ` · 입장 ${state.players.length}/${MAX_PLAYERS}` : " · 연결 중…"}
         </p>
       </header>
 

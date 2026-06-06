@@ -1,6 +1,7 @@
 import type { GameState, Player } from "./types";
 
 export const COUNTDOWN_START_DAYS = 7;
+export const MAX_PLAYERS = 16;
 
 export function initGame(opts: { roomCode: string; teacherPin: string }): GameState {
   return {
@@ -25,7 +26,7 @@ export function addPlayer(
   if (state.phase !== "lobby") return state;
   if (state.players.some((p) => p.id === player.id)) return state;
   if (state.players.some((p) => p.animalId === player.animalId)) return state;
-  if (state.players.length >= 8) return state;
+  if (state.players.length >= MAX_PLAYERS) return state;
 
   const newPlayer: Player = {
     id: player.id,

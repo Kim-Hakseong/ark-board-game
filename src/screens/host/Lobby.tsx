@@ -1,5 +1,6 @@
 import { QRCodeSVG } from "qrcode.react";
 import { getAnimal } from "../../data/animals";
+import { MAX_PLAYERS } from "../../logic/state";
 import type { GameState } from "../../logic/types";
 
 interface LobbyProps {
@@ -34,7 +35,7 @@ export function Lobby({ state, joinUrl, onTestStart, showTestStart }: LobbyProps
 
         <div className="mt-4">
           <div className="text-xl opacity-60 mb-3">
-            입장한 친구들 ({state.players.length}/8)
+            입장한 친구들 ({state.players.length}/{MAX_PLAYERS})
           </div>
           <div className="flex flex-wrap gap-3">
             {state.players.map((p) => {

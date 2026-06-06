@@ -15,6 +15,7 @@ import { Entry } from "./Entry";
 import { MyTurnDice } from "./MyTurnDice";
 import { MyTurnInvite } from "./MyTurnInvite";
 import { MyResultCard } from "../host/Results";
+import { MAX_PLAYERS } from "../../logic/state";
 
 export function PlayScreen() {
   const [searchParams] = useSearchParams();
@@ -360,7 +361,7 @@ function TeacherStub({
     <div className="bg-ink text-cream rounded-2xl p-5 flex flex-col gap-3">
       <div className="font-display text-2xl">진행자 모드</div>
       <div className="text-sm opacity-70">
-        페이즈: {phase} · 인원 {state?.players.length ?? 0}/8 ·{" "}
+        페이즈: {phase} · 인원 {state?.players.length ?? 0}/{MAX_PLAYERS} ·{" "}
         {state?.countdown.active ? `D-${state.countdown.daysLeft}` : "비 전"}
       </div>
 

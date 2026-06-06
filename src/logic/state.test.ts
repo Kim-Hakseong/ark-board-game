@@ -49,12 +49,12 @@ describe("logic/state — addPlayer / removePlayer", () => {
     expect(s.seq).toBe(seq);
   });
 
-  it("최대 8명", () => {
+  it("최대 16명", () => {
     let s = initGame({ roomCode: "ABCD", teacherPin: "1234" });
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 17; i++) {
       s = addPlayer(s, { id: `p${i}`, name: `P${i}`, animalId: `a${i}` });
     }
-    expect(s.players.length).toBe(8);
+    expect(s.players.length).toBe(16);
   });
 
   it("로비 외에는 추가/제거 거부", () => {

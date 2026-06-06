@@ -270,13 +270,34 @@ function QuizPanel({
   send: (a: Action) => void;
 }) {
   const quiz = state.quiz!;
-  const myAnswer = quiz.answers[myPlayerId];
-  // 셀 콘텐츠는 데이터에서 직접 읽음 (호스트가 같은 데이터를 가짐)
   const cell = getCell(quiz.cellIndex);
   if (!cell || cell.kind !== "WORD") return null;
+
+  const isStopped = quiz.stoppedPlayerId === myPlayerId;
+  const stoppedPlayer = state.players.find((p) => p.id === quiz.stoppedPlayerId);
+  const stoppedAnimal = stoppedPlayer ? getAnimal(stoppedPlayer.animalId) : null;
+  const myAnswer = quiz.answers[myPlayerId];
+
+  // 굴리지 않은 학생: 풀이 안내만
+  if (!isStopped) {
+    return (
+      <div className="bg-white rounded-2xl p-6 flex flex-col items-center gap-2 text-center">
+        <div className="text-sm opacity-60">📖 말씀 퀴즈 · {quiz.cellIndex}번 칸</div>
+        <div className="text-6xl mt-2">{stoppedAnimal?.emoji}</div>
+        <div className="font-display text-xl mt-1">
+          {stoppedPlayer?.name}님이 푸는 중…
+        </div>
+        <div className="text-sm opacity-60 mt-2">
+          답은 TV 화면에서 함께 확인해주세요.
+        </div>
+      </div>
+    );
+  }
+
+  // 멈춘 본인의 4지선다
   return (
     <div className="bg-white rounded-2xl p-5 flex flex-col gap-3">
-      <div className="text-sm opacity-60">말씀 퀴즈 ({quiz.cellIndex}번 칸)</div>
+      <div className="text-sm opacity-60">📖 말씀 퀴즈 ({quiz.cellIndex}번 칸)</div>
       <div className="font-display text-lg leading-snug">{cell.question}</div>
       <div className="grid grid-cols-1 gap-2 mt-2">
         {cell.choices.map((choice, i) => {
@@ -305,7 +326,7 @@ function QuizPanel({
         })}
       </div>
       {myAnswer !== undefined && (
-        <div className="text-center text-sm opacity-70 mt-2">제출됨 — 마감 대기 중</div>
+        <div className="text-center text-sm opacity-70 mt-2">제출됨 — 결과 대기 중</div>
       )}
     </div>
   );

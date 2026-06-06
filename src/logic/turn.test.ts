@@ -170,20 +170,18 @@ describe("handleJudge — SHARE/MISSION 판정", () => {
   });
 });
 
-describe("WORD 퀴즈 — 응답/마감/채점", () => {
-  it("멈춘 자 정답 → 토큰+1, 자리유지; 다른 정답자 → 각자 토큰+1, 이동 없음 (PRD §4.2)", () => {
+describe("WORD 퀴즈 — 멈춘 자만 응답/채점", () => {
+  it("멈춘 자 정답 → 즉시 마감 + 토큰+1, 다른 플레이어 변동 없음", () => {
     let s = setup(3);
     s = setPlayer(s, "p0", { position: 0 });
     s = handleDiceRoll(s, "p0", 1); // 1번 WORD (정답 idx 2)
     expect(s.quiz?.cellIndex).toBe(1);
-    s = handleQuizAnswer(s, "p0", 2); // 정답
-    s = handleQuizAnswer(s, "p1", 2); // 정답
-    s = handleQuizAnswer(s, "p2", 0); // 오답 (다른 사람이라 토큰 변동 없음, 이동 없음)
-    expect(s.quiz?.closed).toBe(true); // 전원 응답으로 자동 마감
+    expect(s.quiz?.stoppedPlayerId).toBe("p0");
+    s = handleQuizAnswer(s, "p0", 2); // 정답 → 즉시 마감
+    expect(s.quiz?.closed).toBe(true);
     expect(s.players[0].tokens).toBe(1);
     expect(s.players[0].position).toBe(1);
-    expect(s.players[1].tokens).toBe(1);
-    expect(s.players[1].position).toBe(0);
+    expect(s.players[1].tokens).toBe(0); // 변동 없음
     expect(s.players[2].tokens).toBe(0);
     s = finalizeQuiz(s);
     expect(s.quiz).toBeNull();
@@ -195,21 +193,28 @@ describe("WORD 퀴즈 — 응답/마감/채점", () => {
     s = setPlayer(s, "p0", { position: 0 });
     s = handleDiceRoll(s, "p0", 1); // 1번 WORD
     s = handleQuizAnswer(s, "p0", 0); // 오답
-    s = handleQuizAnswer(s, "p1", 0); // 오답
     expect(s.quiz?.closed).toBe(true);
-    expect(s.players[0].position).toBe(0); // max(0, 1-1) = 0
+    expect(s.players[0].position).toBe(0); // max(0, 1-1)
     expect(s.players[0].tokens).toBe(0);
   });
 
-  it("타이머 만료 시 closeQuiz로 채점 (무응답 = 오답)", () => {
+  it("타이머 만료(무응답) → 멈춘 자 1칸 뒤로", () => {
     let s = setup(2);
     s = setPlayer(s, "p0", { position: 0 });
-    s = handleDiceRoll(s, "p0", 1); // 1번 WORD
-    s = handleQuizAnswer(s, "p1", 2); // p1 정답
+    s = handleDiceRoll(s, "p0", 1);
     s = closeQuiz(s);
     expect(s.quiz?.closed).toBe(true);
-    expect(s.players[1].tokens).toBe(1);
-    expect(s.players[0].position).toBe(0); // 무응답 → 1칸 뒤로 (clamp)
+    expect(s.players[0].position).toBe(0);
+    expect(s.players[1].tokens).toBe(0);
+  });
+
+  it("멈춘 자가 아닌 플레이어 응답은 거부", () => {
+    let s = setup(3);
+    s = setPlayer(s, "p0", { position: 0 });
+    s = handleDiceRoll(s, "p0", 1);
+    const before = s;
+    s = handleQuizAnswer(s, "p1", 2); // 멈춘 자 아님
+    expect(s).toBe(before);
   });
 
   it("중복 응답 거부(첫 답만 인정)", () => {
@@ -217,8 +222,10 @@ describe("WORD 퀴즈 — 응답/마감/채점", () => {
     s = setPlayer(s, "p0", { position: 0 });
     s = handleDiceRoll(s, "p0", 1);
     s = handleQuizAnswer(s, "p0", 0);
-    s = handleQuizAnswer(s, "p0", 2); // 무시
-    expect(s.quiz?.answers["p0"]).toBe(0);
+    expect(s.quiz?.closed).toBe(true); // 첫 답으로 이미 마감
+    const beforeRetry = s;
+    s = handleQuizAnswer(s, "p0", 2);
+    expect(s).toBe(beforeRetry);
   });
 });
 

@@ -6,7 +6,7 @@ interface MyTurnDiceProps {
   onRoll: (dice: number) => void;
 }
 
-const ROLL_DURATION = 700;
+const ROLL_DURATION = 1500;
 
 export function MyTurnDice({ onRoll }: MyTurnDiceProps) {
   const [dice, setDice] = useState<number | null>(null);

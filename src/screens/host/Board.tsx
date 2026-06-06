@@ -297,7 +297,7 @@ function StatusPanel({
           value={state.lastDiceRoll}
           trigger={state.lastDiceRoll == null ? null : `${state.seq}-${state.lastDiceRoll}`}
           size="lg"
-          durationMs={700}
+          durationMs={1500}
         />
         {state.lastDiceRoll != null && (
           <div className="font-display text-5xl text-ark-gold drop-shadow">

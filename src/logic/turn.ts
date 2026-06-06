@@ -207,7 +207,9 @@ export function handleJudge(
   return s;
 }
 
-// WORD 퀴즈 응답. 첫 답만 인정. 전원 응답 시 자동 마감.
+// WORD 퀴즈 응답. **굴린 사람(stoppedPlayerId)만** 응답 가능. 첫 답만 인정.
+// (PRD §4.2 원본은 '전원 참여'였으나 운영자 요청으로 변경.)
+// 멈춘 자가 답하면 즉시 마감.
 export function handleQuizAnswer(
   state: GameState,
   playerId: string,
@@ -215,7 +217,7 @@ export function handleQuizAnswer(
 ): GameState {
   if (!state.quiz || state.quiz.closed) return state;
   if (choiceIndex < 0 || choiceIndex > 3) return state;
-  if (!state.players.some((p) => p.id === playerId)) return state;
+  if (playerId !== state.quiz.stoppedPlayerId) return state;
   if (state.quiz.answers[playerId] !== undefined) return state;
 
   let s = tickSeq(state);
@@ -226,11 +228,7 @@ export function handleQuizAnswer(
       answers: { ...state.quiz.answers, [playerId]: choiceIndex },
     },
   };
-  const everyoneAnswered = Object.keys(s.quiz!.answers).length >= s.players.length;
-  if (everyoneAnswered) {
-    s = closeQuizInternal(s);
-  }
-  return s;
+  return closeQuizInternal(s);
 }
 
 // 타이머 만료/외부 트리거로 마감 → 채점.
@@ -244,23 +242,18 @@ function closeQuizInternal(state: GameState): GameState {
   const cell = getCell(state.quiz.cellIndex);
   if (!cell || cell.kind !== "WORD") return state;
 
+  // 굴린 사람만 채점. 다른 플레이어는 변동 없음 (운영자 요청, PRD §4.2 변경).
   const correctIdx = cell.correctIndex;
   const stoppedId = state.quiz.stoppedPlayerId;
-  const answers = state.quiz.answers;
+  const ans = state.quiz.answers[stoppedId];
   let s = state;
-
-  for (const player of s.players) {
-    const ans = answers[player.id];
-    const correct = ans === correctIdx;
-    if (player.id === stoppedId) {
-      if (correct) {
-        s = updatePlayer(s, player.id, (p) => ({ ...p, tokens: p.tokens + 1 }));
-      } else {
-        const r = applyBackwardEffect(player.position, 1);
-        s = updatePlayer(s, player.id, (p) => ({ ...p, position: r.newPos }));
-      }
-    } else if (correct) {
-      s = updatePlayer(s, player.id, (p) => ({ ...p, tokens: p.tokens + 1 }));
+  if (ans === correctIdx) {
+    s = updatePlayer(s, stoppedId, (p) => ({ ...p, tokens: p.tokens + 1 }));
+  } else {
+    const player = s.players.find((p) => p.id === stoppedId);
+    if (player) {
+      const r = applyBackwardEffect(player.position, 1);
+      s = updatePlayer(s, stoppedId, (p) => ({ ...p, position: r.newPos }));
     }
   }
 

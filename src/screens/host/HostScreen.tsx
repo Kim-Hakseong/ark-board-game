@@ -22,12 +22,31 @@ function getOrCreateActiveRoom(): HostActiveRoom {
   return room;
 }
 
+const OVERLAY_DELAY_MS = 1500;
+
+function useDelayedOverlay(key: number | null | undefined): boolean {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (key == null) {
+      setReady(false);
+      return;
+    }
+    setReady(false);
+    const t = window.setTimeout(() => setReady(true), OVERLAY_DELAY_MS);
+    return () => window.clearTimeout(t);
+  }, [key]);
+  return ready;
+}
+
 export function HostScreen() {
   const [room] = useState<HostActiveRoom>(() => getOrCreateActiveRoom());
   const { state, adapter, apply } = useHostGame(room);
   const [muted, setMuted] = useState<boolean>(() => sound.isMuted);
 
   useSoundEffects(state);
+
+  const quizReady = useDelayedOverlay(state.quiz?.cellIndex ?? null);
+  const cellReady = useDelayedOverlay(state.activeCell?.index ?? null);
 
   useEffect(() => {
     document.title = `방주로 가는 길 — ${room.roomCode}`;
@@ -87,8 +106,8 @@ export function HostScreen() {
       {(state.phase === "playing" || state.phase === "rain") && (
         <>
           <Board state={state} />
-          {state.activeCell && <CellOverlay state={state} />}
-          {state.quiz && (
+          {state.activeCell && cellReady && <CellOverlay state={state} />}
+          {state.quiz && quizReady && (
             <QuizOverlay
               state={state}
               onContinue={() => apply({ type: "finalizeQuiz" })}

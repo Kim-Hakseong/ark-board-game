@@ -27,7 +27,7 @@ export function QuizOverlay({ state, onContinue }: QuizOverlayProps) {
               📖 말씀 퀴즈 · {cell.index}번 칸
             </div>
             <div className="text-sm opacity-70 mb-4">
-              {stoppedAnimal?.emoji} {stoppedPlayer?.name}님이 멈춘 칸 — 전원 참여
+              {stoppedAnimal?.emoji} {stoppedPlayer?.name}님 차례 — 본인만 답해주세요
             </div>
             <h2 className="font-display text-5xl leading-tight">{cell.question}</h2>
           </div>
@@ -56,14 +56,20 @@ export function QuizOverlay({ state, onContinue }: QuizOverlayProps) {
           })}
         </div>
 
-        {!closed && <ResponseStrip state={state} />}
+        {!closed && (
+          <div className="flex items-center gap-3 mt-6">
+            <span className="text-sm opacity-60 font-display">
+              {stoppedAnimal?.emoji} {stoppedPlayer?.name}님이 푸는 중…
+            </span>
+          </div>
+        )}
 
         {closed && (
           <div className="mt-8 flex flex-col gap-4">
             <div className="bg-white/70 rounded-2xl p-5 text-2xl">
               💡 {cell.explanation}
             </div>
-            <WinnersStrip state={state} correctIndex={cell.correctIndex} />
+            <StoppedResult state={state} correctIndex={cell.correctIndex} />
             <button
               type="button"
               onClick={onContinue}
@@ -107,59 +113,33 @@ function TimerRing({ deadlineMs }: { deadlineMs: number }) {
   );
 }
 
-function ResponseStrip({ state }: { state: GameState }) {
-  const quiz = state.quiz!;
-  return (
-    <div className="flex items-center gap-3 mt-6 flex-wrap">
-      <span className="text-sm opacity-60 font-display">응답</span>
-      {state.players.map((p) => {
-        const a = getAnimal(p.animalId);
-        const answered = quiz.answers[p.id] !== undefined;
-        return (
-          <div
-            key={p.id}
-            className={[
-              "w-10 h-10 rounded-full flex items-center justify-center text-xl shadow",
-              answered ? "bg-grace text-white" : "bg-white opacity-50",
-            ].join(" ")}
-            title={p.name}
-          >
-            {a?.emoji}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function WinnersStrip({
+function StoppedResult({
   state,
   correctIndex,
 }: {
   state: GameState;
   correctIndex: number;
 }) {
-  const winners = state.players.filter(
-    (p) => state.quiz!.answers[p.id] === correctIndex,
-  );
-  if (winners.length === 0)
-    return <div className="text-base opacity-60">정답자 없음</div>;
+  const quiz = state.quiz!;
+  const stopped = state.players.find((p) => p.id === quiz.stoppedPlayerId);
+  if (!stopped) return null;
+  const a = getAnimal(stopped.animalId);
+  const ans = quiz.answers[stopped.id];
+  const isCorrect = ans === correctIndex;
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <span className="text-base opacity-60 font-display">정답</span>
-      {winners.map((p) => {
-        const a = getAnimal(p.animalId);
-        return (
-          <div
-            key={p.id}
-            className="flex items-center gap-1 bg-grace/30 rounded-full px-3 py-1 font-display animate-bounce"
-          >
-            <span className="text-xl">{a?.emoji}</span>
-            <span>{p.name}</span>
-            <span className="text-xs opacity-70">+1🪙</span>
-          </div>
-        );
-      })}
+    <div
+      className={[
+        "rounded-2xl p-4 flex items-center gap-3 font-display border-4",
+        isCorrect ? "bg-grace/30 border-grace" : "bg-mission/20 border-mission-edge",
+      ].join(" ")}
+    >
+      <span className="text-4xl">{a?.emoji}</span>
+      <span className="text-2xl">{stopped.name}</span>
+      {isCorrect ? (
+        <span className="ml-auto text-2xl">✓ 정답! +1 🪙</span>
+      ) : (
+        <span className="ml-auto text-2xl">✗ {ans === undefined ? "무응답" : "오답"} · 1칸 뒤로</span>
+      )}
     </div>
   );
 }

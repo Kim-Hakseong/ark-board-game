@@ -1,5 +1,5 @@
 import { getAnimal } from "../../data/animals";
-import { getCell } from "../../data/cells";
+import { getCell, type EventEffect } from "../../data/cells";
 import type { GameState } from "../../logic/types";
 
 interface CellOverlayProps {
@@ -29,7 +29,7 @@ export function CellOverlay({ state }: CellOverlayProps) {
             name={cell.name}
             line={cell.line}
             actor={`${animal?.emoji} ${player?.name}`}
-            awaitingGrace={active.awaitingGraceTarget}
+            effect={cell.effect}
           />
         )}
         <div className="text-center text-base opacity-60 mt-8 font-display">
@@ -66,12 +66,12 @@ function EventCard({
   name,
   line,
   actor,
-  awaitingGrace,
+  effect,
 }: {
   name: string;
   line: string;
   actor: string;
-  awaitingGrace: boolean;
+  effect: EventEffect;
 }) {
   return (
     <div className="flex flex-col gap-4 items-center text-center">
@@ -79,11 +79,42 @@ function EventCard({
       <div className="text-base opacity-70 font-display">{actor}</div>
       <h2 className="font-display text-5xl leading-snug">{name}</h2>
       <p className="text-2xl leading-snug opacity-90 max-w-2xl">{line}</p>
-      {awaitingGrace && (
-        <div className="text-base font-display mt-2 bg-grace/30 px-4 py-2 rounded-xl">
-          🤝 멈춘 친구가 한 명을 +1칸 보내줍니다.
-        </div>
-      )}
+      <EffectBadge effect={effect} />
+    </div>
+  );
+}
+
+function EffectBadge({ effect }: { effect: EventEffect }) {
+  let label = "";
+  let tone: "good" | "bad" | "neutral" = "neutral";
+  if (effect.type === "moveBack") {
+    label = `🔻 ${effect.steps}칸 뒤로`;
+    tone = "bad";
+  } else if (effect.type === "moveForward") {
+    label = `🔺 ${effect.steps}칸 전진`;
+    tone = "good";
+  } else if (effect.type === "tokenDelta") {
+    label = `🪙 토큰 +${effect.delta}`;
+    tone = "good";
+  } else if (effect.type === "skipTurn") {
+    label = "💤 한 턴 쉬기";
+    tone = "bad";
+  } else if (effect.type === "backToStart") {
+    label = "↩️ 처음으로 돌아가기";
+    tone = "bad";
+  } else if (effect.type === "advanceOther") {
+    label = `🤝 다른 친구에게 +${effect.steps}칸`;
+    tone = "good";
+  }
+  const palette =
+    tone === "good"
+      ? "bg-grace/30 text-grace"
+      : tone === "bad"
+        ? "bg-mission/30 text-mission-edge"
+        : "bg-ink/10 text-ink";
+  return (
+    <div className={`text-2xl font-display px-5 py-2 rounded-2xl ${palette}`}>
+      {label}
     </div>
   );
 }

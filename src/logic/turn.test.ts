@@ -85,11 +85,11 @@ describe("handleDiceRoll — 기본/반사/도착", () => {
 });
 
 describe("handleDiceRoll — EVENT 처리", () => {
-  it("EVENT 5(비웃음) → 2칸 뒤로 + 확인 대기", () => {
+  it("EVENT 5(비웃음) → 3칸 뒤로 + 확인 대기 (밸런스 조정)", () => {
     let s = setup(2);
     s = setPlayer(s, "p0", { position: 4 });
     s = handleDiceRoll(s, "p0", 1); // 5번 EVENT
-    expect(s.players[0].position).toBe(3);
+    expect(s.players[0].position).toBe(2); // 5 - 3 = 2
     expect(s.activeCell?.awaitingConfirm).toBe(true);
     s = handleEventConfirm(s);
     expect(s.currentTurnIdx).toBe(1);
@@ -105,13 +105,13 @@ describe("handleDiceRoll — EVENT 처리", () => {
     expect(s.currentTurnIdx).toBe(1);
   });
 
-  it("EVENT 14(먹고 마시고) → pendingSkip 설정", () => {
+  it("EVENT 14(먹고 마시고) → 처음(0)으로 돌아가기 (밸런스 조정)", () => {
     let s = setup(2);
     s = setPlayer(s, "p0", { position: 13 });
     s = handleDiceRoll(s, "p0", 1); // 14번
-    expect(s.players[0].pendingSkip).toBe(true);
+    expect(s.players[0].position).toBe(0);
+    expect(s.players[0].pendingSkip).toBe(false);
     s = handleEventConfirm(s);
-    // 다음 turn은 p1
     expect(s.currentTurnIdx).toBe(1);
   });
 
@@ -124,14 +124,14 @@ describe("handleDiceRoll — EVENT 처리", () => {
     expect(s.quiz).toBeNull(); // 23번이 SHARE지만 연쇄 발동 없음
   });
 
-  it("EVENT 25(은혜) → grace 대상 선택 대기", () => {
+  it("EVENT 25(은혜) → 미도착 1명 +2칸 (밸런스 조정)", () => {
     let s = setup(3);
     s = setPlayer(s, "p0", { position: 24 });
     s = setPlayer(s, "p1", { position: 5 });
     s = handleDiceRoll(s, "p0", 1); // 25번
     expect(s.activeCell?.awaitingGraceTarget).toBe(true);
     s = handleGraceSelect(s, "p1");
-    expect(s.players[1].position).toBe(6);
+    expect(s.players[1].position).toBe(7); // 5 + 2
     expect(s.activeCell).toBeNull();
     expect(s.currentTurnIdx).toBe(1);
   });

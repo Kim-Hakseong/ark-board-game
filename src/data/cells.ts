@@ -29,6 +29,7 @@ export type EventEffect =
   | { type: "moveForward"; steps: number }
   | { type: "tokenDelta"; delta: number }
   | { type: "skipTurn" }
+  | { type: "backToStart" }
   | { type: "advanceOther"; steps: number };
 
 export interface EventCell {
@@ -154,12 +155,16 @@ const MISSION_CELLS: readonly MissionCell[] = [
 ];
 
 // ── 6.4 EVENT (5칸): 5, 10, 14, 20, 25 ──
+// 밸런스 조정 (PRD §6.4 멘트는 보존, 효과만 강화):
+//   5번 비웃음:  -2칸 → -3칸 (초반 페널티 살짝 강화)
+//   14번 먹고 마시고:  한 턴 쉬기 → 처음으로 (catch-up 메커닉 — 멘트와 부합)
+//   25번 은혜:  미도착 +1 → 미도착 +2 (협력 인센티브 강화)
 const EVENT_CELLS: readonly EventCell[] = [
   {
     index: 5,
     kind: "EVENT",
     name: "비웃음",
-    effect: { type: "moveBack", steps: 2 },
+    effect: { type: "moveBack", steps: 3 },
     line: "노아도 비웃음을 견뎠습니다.",
   },
   {
@@ -173,7 +178,7 @@ const EVENT_CELLS: readonly EventCell[] = [
     index: 14,
     kind: "EVENT",
     name: "먹고 마시고",
-    effect: { type: "skipTurn" },
+    effect: { type: "backToStart" },
     line: "일상 자체는 죄가 아닙니다. 그 안에 하나님이 없는 것이 문제입니다.",
   },
   {
@@ -187,7 +192,7 @@ const EVENT_CELLS: readonly EventCell[] = [
     index: 25,
     kind: "EVENT",
     name: "은혜",
-    effect: { type: "advanceOther", steps: 1 },
+    effect: { type: "advanceOther", steps: 2 },
     line: "유일하게 '남을 앞으로 보내는' 칸 — 이것이 전도입니다.",
   },
 ];

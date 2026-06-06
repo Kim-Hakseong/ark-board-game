@@ -146,6 +146,9 @@ function applyEvent(state: GameState, playerId: string, cell: EventCell): GameSt
     }));
   } else if (effect.type === "skipTurn") {
     s = updatePlayer(s, playerId, (p) => ({ ...p, pendingSkip: true }));
+  } else if (effect.type === "backToStart") {
+    // catch-up: 처음(0)으로 돌아감. 콘텐츠 미발동.
+    s = updatePlayer(s, playerId, (p) => ({ ...p, position: 0 }));
   } else if (effect.type === "advanceOther") {
     awaitGrace = true;
   }
@@ -172,14 +175,17 @@ export function handleEventConfirm(state: GameState): GameState {
   return s;
 }
 
-// EVENT 25(은혜) — 멈춘 플레이어가 미도착 1명을 골라 +1칸.
+// EVENT 25(은혜) — 멈춘 플레이어가 미도착 1명을 골라 전진. steps는 셀의 effect에서 읽음.
 export function handleGraceSelect(state: GameState, targetId: string): GameState {
   if (!state.activeCell?.awaitingGraceTarget) return state;
   const target = state.players.find((p) => p.id === targetId);
   if (!target || target.arrived) return state;
+  const cell = getCell(state.activeCell.index);
+  if (!cell || cell.kind !== "EVENT" || cell.effect.type !== "advanceOther") return state;
+  const steps = cell.effect.steps;
 
   let s = tickSeq(state);
-  const r = applyForwardEffect(target.position, 1);
+  const r = applyForwardEffect(target.position, steps);
   s = updatePlayer(s, targetId, (p) => ({ ...p, position: r.newPos }));
   if (r.arrived) s = markArrival(s, targetId);
   s = { ...s, activeCell: null };

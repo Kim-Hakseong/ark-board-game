@@ -65,18 +65,19 @@ describe("data/cells — 무결성", () => {
     }
   });
 
-  it("EVENT 5종 — 효과 타입이 PRD §6.4와 정확히 일치", () => {
+  it("EVENT 5종 — 효과 (밸런스 조정 반영)", () => {
     const event5 = CELLS.find((c) => c.index === 5);
     const event10 = CELLS.find((c) => c.index === 10);
     const event14 = CELLS.find((c) => c.index === 14);
     const event20 = CELLS.find((c) => c.index === 20);
     const event25 = CELLS.find((c) => c.index === 25);
 
-    expect(event5?.kind === "EVENT" && event5.effect).toEqual({ type: "moveBack", steps: 2 });
+    // 밸런스 조정: 5번 -2→-3, 14번 skip→backToStart, 25번 +1→+2
+    expect(event5?.kind === "EVENT" && event5.effect).toEqual({ type: "moveBack", steps: 3 });
     expect(event10?.kind === "EVENT" && event10.effect).toEqual({ type: "tokenDelta", delta: 1 });
-    expect(event14?.kind === "EVENT" && event14.effect).toEqual({ type: "skipTurn" });
+    expect(event14?.kind === "EVENT" && event14.effect).toEqual({ type: "backToStart" });
     expect(event20?.kind === "EVENT" && event20.effect).toEqual({ type: "moveForward", steps: 3 });
-    expect(event25?.kind === "EVENT" && event25.effect).toEqual({ type: "advanceOther", steps: 1 });
+    expect(event25?.kind === "EVENT" && event25.effect).toEqual({ type: "advanceOther", steps: 2 });
   });
 
   it("PRD §6 핵심 문구 — 글자 단위 보존 (샘플 점검)", () => {

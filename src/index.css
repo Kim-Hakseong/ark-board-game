@@ -3,44 +3,111 @@
 @tailwind utilities;
 
 :root {
-  /* Design.md §3 — 컬러 시스템 */
+  /* ── 베이스 ── */
   --bg-cream: #FDF6EC;
-  --ink: #4A3B2A;
+  --paper:    #FFFBF3;
+  --ink:      #4A3B2A;
+  --ink-soft: #7A6850;
 
-  /* 보드 풍경 4구역 그라데이션 */
+  /* ── 칸 종류 4종 ── */
+  --word: #CDE4F2;       --word-edge: #5B8DB8;   --word-deep: #3C6E96;
+  --share: #FAE8B4;      --share-edge: #C9A227;  --share-deep: #A8851A;
+  --mission: #F6CFC4;    --mission-edge: #C96A4E;--mission-deep: #A8543B;
+  --event: #E3D4F0;      --event-edge: #8E6FB8;  --event-deep: #6F529A;
+
+  /* legacy aliases (Tailwind config 호환) */
+  --word-fill: var(--word);
+  --share-fill: var(--share);
+  --mission-fill: var(--mission);
+  --event-fill: var(--event);
   --field: #DDEBC8;
-  --bone: #F0E2C2;
-  --sand: #F5D9A8;
+  --bone:  #F0E2C2;
+  --sand:  #F5D9A8;
   --peach: #F8CFAE;
 
-  /* 칸 종류 (fill / border) */
-  --word: #CDE4F2;
-  --word-edge: #5B8DB8;
-  --share: #FAE8B4;
-  --share-edge: #C9A227;
-  --mission: #F6CFC4;
-  --mission-edge: #C96A4E;
-  --event: #E3D4F0;
-  --event-edge: #8E6FB8;
-
-  /* 강조색 */
+  /* ── 강조 ── */
   --ark-gold: #E8A33D;
-  --grace: #7FB069;
+  --ark-deep: #C97F1E;
+  --grace:    #7FB069;
+  --grace-deep:#5E8C4C;
+  --rain:     #8FA3BF;
 
-  /* 비 페이즈 */
-  --rain: #8FA3BF;
+  /* ── 풍경 그라데이션 좌→우 4구역 ── */
+  --zone-field:  #DDEBC8;
+  --zone-dry:    #F0E2C2;
+  --zone-march:  #F5D9A8;
+  --zone-sky:    #F8CFAE;
+  --sky-top:     #BFE3F2;
+  --sky-mid:     #E8F4F0;
+
+  /* ── 타이포 (Jua/Gamja Flower 우선, 없으면 시스템 폴백) ── */
+  --font-display: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-hand:    "Gamja Flower", "Jua", "Apple SD Gothic Neo", sans-serif;
+  --font-body:    "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --t-hero:   88px;
+  --t-title:  56px;
+  --t-sub:    40px;
+  --t-body:   30px;
+  --t-cell:   34px;
+  --t-small:  24px;
+  --t-dcount: 120px;
+
+  /* ── 보더 / 라운드 ── */
+  --bd-thick: 6px;
+  --bd-med:   4px;
+  --r-token:  50%;
+  --r-card:   28px;
+  --r-chip:   18px;
+
+  /* ── 그림자 ── */
+  --sh-soft:  0 6px 16px rgba(74,59,42,.16);
+  --sh-deep:  0 14px 32px rgba(74,59,42,.26);
+  --sh-pop:   0 10px 0 rgba(74,59,42,.18), 0 18px 30px rgba(74,59,42,.22);
+  --sh-token: 0 5px 0 rgba(74,59,42,.20), 0 10px 14px rgba(74,59,42,.18);
+
+  /* ── 모션 ── */
+  --ease-pop: cubic-bezier(.34,1.56,.64,1);
+  --dur-fast: .22s;
+  --dur-med:  .42s;
 }
 
-html, body, #root {
-  height: 100%;
-}
-
+html, body, #root { height: 100%; }
 body {
   margin: 0;
   background: var(--bg-cream);
   color: var(--ink);
-  font-family: "Pretendard", "Apple SD Gothic Neo", system-ui, sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
+}
+
+/* 종이 질감 노이즈 (인라인 SVG fractalNoise, 외부 자원 없음) */
+.paper-noise::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: .05;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* TV 1920×1080 고정 캔버스 → 뷰포트 스케일 */
+.tv-stage {
+  position: fixed;
+  inset: 0;
+  background: #2b2418;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.tv-canvas {
+  width: 1920px;
+  height: 1080px;
+  position: relative;
+  flex: none;
+  transform-origin: center center;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -51,3 +118,10 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* 공용 keyframes */
+@keyframes bob       { 0%,100%{ transform: translateY(0) rotate(-1.5deg);} 50%{ transform: translateY(-9px) rotate(1.5deg);} }
+@keyframes pop       { from { transform: scale(.4) translateY(20px); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes fall      { to { transform: translateY(130px); opacity:0; } }
+@keyframes wave      { 0%,100%{ transform: translateY(0) rotate(-3deg);} 50%{ transform: translateY(-10px) rotate(3deg);} }
+@keyframes drop      { to { transform: translateY(1120px) rotate(540deg); } }

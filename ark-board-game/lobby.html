@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>방주로 가는 길 — 로비</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .lobby-root { position:absolute; inset:0; overflow:hidden; }
+  .scape { position:absolute; inset:0; } .scape svg { width:100%; height:100%; display:block; }
+
+  .lobby-grid {
+    position:absolute; inset:0; z-index:5;
+    display:grid; grid-template-columns: 560px 1fr; grid-template-rows: auto 1fr;
+    gap: 40px; padding: 56px 64px 56px;
+  }
+
+  /* 타이틀 박스 표지 플라크 */
+  .title-plaque { grid-column: 1 / -1; display:flex; align-items:center; gap: 32px; }
+  .title-plaque .ark-ico { width: 124px; height: 108px; flex:none; filter: drop-shadow(0 10px 10px rgba(74,59,42,.3)); }
+  .title-words { line-height: 1; }
+  .title-words .kicker {
+    display:inline-block; font-family: var(--font-display); font-size: 24px; color:#fff; white-space:nowrap;
+    background: var(--grace); padding: 6px 20px; border-radius: 16px; border:4px solid #fff;
+    box-shadow: var(--sh-soft); transform: rotate(-2deg); margin-bottom: 12px;
+  }
+  .title-words h1 {
+    margin:0; font-family: var(--font-display); font-size: 88px; color: var(--ark-deep); white-space:nowrap; line-height:1;
+    -webkit-text-stroke: 7px #fff; paint-order: stroke fill;
+    text-shadow: 0 7px 0 rgba(201,127,30,.35), 0 12px 16px rgba(74,59,42,.25);
+  }
+
+  /* 입장 카드 (QR) */
+  .entry-card {
+    align-self: start; background: var(--paper); border-radius: var(--r-card);
+    border: 7px solid #fff; box-shadow: var(--sh-deep); padding: 34px 32px; transform: rotate(-1.5deg);
+    position: relative;
+  }
+  .entry-card .tape {
+    position:absolute; top:-18px; left:50%; transform: translateX(-50%) rotate(-3deg);
+    width: 140px; height: 36px; background: rgba(232,163,61,.55); border-radius: 4px;
+    box-shadow: var(--sh-soft);
+  }
+  .entry-card h2 { margin:0 0 18px; font-family: var(--font-display); font-size: 36px; color: var(--ink); text-align:center; }
+  .qr {
+    width: 320px; height: 320px; margin: 0 auto; background:#fff; border:6px solid var(--ink);
+    border-radius: 18px; padding: 14px; box-shadow: var(--sh-soft);
+  }
+  .qr svg { width:100%; height:100%; display:block; }
+  .code-row { display:flex; gap: 16px; margin-top: 24px; }
+  .code-box { flex:1; background: linear-gradient(180deg,#fff5e2,#ffe9c4); border:5px solid var(--ark-gold);
+    border-radius: 20px; padding: 12px 8px 14px; text-align:center; box-shadow: var(--sh-soft); }
+  .code-box small { display:block; font-size: 22px; color: var(--ink-soft); font-family: var(--font-display); }
+  .code-box b { font-family: var(--font-display); font-size: 56px; letter-spacing: 6px; color: var(--ark-deep); line-height:1; }
+  .pin-box { background: linear-gradient(180deg,#eef3fb,#dde7f5); border-color:#8FA3BF; }
+  .pin-box small { color:#5d77a0; }
+  .pin-box b { color:#5d77a0; font-size: 48px; letter-spacing: 8px; }
+
+  /* 입장 갤러리 */
+  .gallery-wrap { align-self: start; }
+  .gallery-head { display:flex; align-items:center; gap:14px; margin-bottom: 18px; }
+  .gallery-head h2 { margin:0; font-family: var(--font-display); font-size: 42px; color:#fff; white-space:nowrap; text-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .count-pill { font-family: var(--font-display); font-size: 30px; color: var(--ark-deep); background: var(--paper); white-space:nowrap;
+    border:5px solid #fff; border-radius: 20px; padding: 4px 20px; box-shadow: var(--sh-soft); }
+
+  .gallery { display:grid; grid-template-columns: repeat(5, 1fr); gap: 24px 16px; }
+  .friend { text-align:center; animation: pop .5s var(--ease-pop) backwards; }
+  .friend .stand {
+    width: 128px; height: 138px; margin: 0 auto 8px; border-radius: 50px 50px 24px 24px;
+    background: linear-gradient(180deg, var(--paper), #f4e9d6); border:6px solid #fff;
+    box-shadow: var(--sh-pop); display:grid; place-items:center; position:relative;
+  }
+  .friend .stand::after { content:""; position:absolute; bottom:-16px; left:50%; transform:translateX(-50%);
+    width: 86px; height: 20px; border-radius:50%; background: radial-gradient(ellipse, rgba(74,59,42,.3), transparent 70%); }
+  .friend .face { font-size: 70px; }
+  .friend .nm { font-family: var(--font-display); font-size: 28px; color: var(--ink); white-space:nowrap;
+    background: rgba(255,251,243,.9); border-radius: 14px; padding: 2px 10px; display:inline-block; }
+  .friend.empty .stand { background: rgba(255,251,243,.4); border-style: dashed; border-color: rgba(255,255,255,.7); box-shadow:none; }
+  .friend.empty .face { font-size: 50px; opacity:.5; }
+  .friend.empty .nm { color: var(--ink-soft); background: transparent; }
+  @keyframes pop { from { transform: scale(.4) translateY(20px); opacity:0; } to { transform:none; opacity:1; } }
+</style>
+</head>
+<body>
+<div class="tv-stage">
+  <div class="tv-canvas">
+    <div class="lobby-root paper-noise" data-screen-label="호스트·로비">
+
+      <!-- 배경 -->
+      <div class="scape">
+        <svg viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#CDEAF5"/><stop offset="1" stop-color="#EAF6EE"/>
+            </linearGradient>
+            <radialGradient id="sun2" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FFF6D8"/><stop offset="1" stop-color="#FFE9A8" stop-opacity="0"/></radialGradient>
+          </defs>
+          <rect width="1920" height="1080" fill="url(#sky2)"/>
+          <circle cx="1620" cy="200" r="260" fill="url(#sun2)"/>
+          <circle cx="1620" cy="200" r="90" fill="#FFE07A"/>
+          <!-- 무지개 -->
+          <g fill="none" stroke-width="22" opacity=".5">
+            <path d="M120 720 A 840 840 0 0 1 1800 720" stroke="#E58B8B"/>
+            <path d="M150 730 A 810 810 0 0 1 1770 730" stroke="#E6B36A"/>
+            <path d="M180 740 A 780 780 0 0 1 1740 740" stroke="#E6D673"/>
+            <path d="M210 750 A 750 750 0 0 1 1710 750" stroke="#94C97E"/>
+            <path d="M240 760 A 720 720 0 0 1 1680 760" stroke="#7FB6D6"/>
+          </g>
+          <g fill="#fff" opacity=".9"><ellipse cx="400" cy="180" rx="120" ry="46"/><ellipse cx="480" cy="160" rx="76" ry="42"/><ellipse cx="1180" cy="140" rx="110" ry="44"/></g>
+          <path d="M0 760 Q 480 690 980 760 T 1920 760 V1080 H0 Z" fill="#CFE3AE"/>
+          <path d="M0 880 Q 520 820 1040 880 T 1920 900 V1080 H0 Z" fill="#BBD68E"/>
+          <g transform="translate(150 840)"><rect x="-12" y="0" width="24" height="60" rx="8" fill="#9C6B3E"/><circle cx="0" cy="-18" r="56" fill="#8FBF6B"/><circle cx="-34" cy="6" r="38" fill="#9FCB78"/></g>
+          <g transform="translate(1780 860) scale(.9)"><rect x="-12" y="0" width="24" height="60" rx="8" fill="#9C6B3E"/><circle cx="0" cy="-18" r="56" fill="#7FB05E"/></g>
+        </svg>
+      </div>
+
+      <div class="lobby-grid">
+        <!-- 타이틀 -->
+        <div class="title-plaque">
+          <svg class="ark-ico" viewBox="0 0 150 130" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="75" cy="80" rx="78" ry="42" fill="#FFE9A8" opacity=".55"/>
+            <path d="M10 78 Q75 116 140 78 L128 104 Q75 128 22 104 Z" fill="#D9A86A" stroke="#8A5A2E" stroke-width="5" stroke-linejoin="round"/>
+            <rect x="38" y="36" width="74" height="44" rx="8" fill="#E7C68C" stroke="#8A5A2E" stroke-width="5"/>
+            <path d="M30 38 L75 12 L120 38 Z" fill="#C8763E" stroke="#8A5A2E" stroke-width="5" stroke-linejoin="round"/>
+            <path d="M64 80 V58 a11 11 0 0 1 22 0 V80 Z" fill="#FFF6D8" stroke="#8A5A2E" stroke-width="4"/>
+          </svg>
+          <div class="title-words">
+            <span class="kicker">교회 토요교제 · 실시간 게임</span>
+            <h1>방주로 가는 길</h1>
+          </div>
+        </div>
+
+        <!-- 입장 카드 -->
+        <div class="entry-card">
+          <div class="tape"></div>
+          <h2>📱 폰으로 입장하세요</h2>
+          <div class="qr">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" id="qr"></svg>
+          </div>
+          <div class="code-row">
+            <div class="code-box"><small>방 코드</small><b>NOAH</b></div>
+            <div class="code-box pin-box"><small>교사 PIN</small><b>0719</b></div>
+          </div>
+        </div>
+
+        <!-- 갤러리 -->
+        <div class="gallery-wrap">
+          <div class="gallery-head">
+            <h2>입장한 친구들</h2>
+            <span class="count-pill">9명</span>
+          </div>
+          <div class="gallery" id="gallery"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function fitStage(){ const c=document.querySelector('.tv-canvas'); const s=Math.min(innerWidth/1920,innerHeight/1080); c.style.transform=`scale(${s})`; }
+addEventListener('resize',fitStage); fitStage();
+
+/* 가짜 QR (장식용 — 실제 앱은 qrcode.react) */
+(function(){
+  const svg=document.getElementById('qr'); const n=21, c=100/n; let r='';
+  const seed=(x,y)=>((x*73856093)^(y*19349663))>>>0;
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){ if((seed(x+1,y+1)%100)<48) r+=`<rect x="${x*c}" y="${y*c}" width="${c}" height="${c}" fill="#4A3B2A"/>`; }
+  const fp=(ox,oy)=>`<rect x="${ox}" y="${oy}" width="${c*7}" height="${c*7}" fill="#4A3B2A"/><rect x="${ox+c}" y="${oy+c}" width="${c*5}" height="${c*5}" fill="#fff"/><rect x="${ox+c*2}" y="${oy+c*2}" width="${c*3}" height="${c*3}" fill="#4A3B2A"/>`;
+  r+=fp(0,0)+fp(c*14,0)+fp(0,c*14);
+  svg.innerHTML=r;
+})();
+
+/* 입장 동물 갤러리 */
+const FRIENDS=[
+  {f:'🦊',n:'지민'},{f:'🐰',n:'서연'},{f:'🐘',n:'도윤'},{f:'🐑',n:'하은'},
+  {f:'🦁',n:'은우'},{f:'🐻',n:'예준'},{f:'🦒',n:'수아'},{f:'🐢',n:'민준'},
+  {f:'🦌',n:'채원'},
+];
+const SLOTS=10;
+const g=document.getElementById('gallery');
+for(let i=0;i<SLOTS;i++){
+  const fr=FRIENDS[i];
+  const el=document.createElement('div');
+  if(fr){ el.className='friend'; el.style.animationDelay=(i*70)+'ms';
+    el.innerHTML=`<div class="stand"><span class="face">${fr.f}</span></div><span class="nm">${fr.n}</span>`; }
+  else { el.className='friend empty';
+    el.innerHTML=`<div class="stand"><span class="face">＋</span></div><span class="nm">대기중</span>`; }
+  g.appendChild(el);
+}
+</script>
+</body>
+</html>

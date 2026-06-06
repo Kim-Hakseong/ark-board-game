@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>방주로 가는 길 — 호스트 보드</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  /* ====================== 보드 레이아웃 ====================== */
+  .board-root { position: absolute; inset: 0; overflow: hidden; }
+
+  /* 풍경 배경 레이어 */
+  .scape { position: absolute; inset: 0; }
+  .scape svg { width: 100%; height: 100%; display: block; }
+
+  /* 좌측 트랙 영역 + 우측 패널 */
+  .play-area { position: absolute; top: 0; left: 0; width: 1480px; height: 1080px; }
+  .status-panel {
+    position: absolute; top: 0; right: 0; width: 440px; height: 1080px;
+    padding: 34px 30px 30px;
+    background:
+      repeating-linear-gradient(0deg, rgba(120,82,40,.06) 0 22px, rgba(120,82,40,.11) 22px 24px),
+      linear-gradient(180deg, #8a5a2e, #774a24);
+    border-left: 8px solid #5e3a1b;
+    box-shadow: -18px 0 40px rgba(74,59,42,.28);
+    display: flex; flex-direction: column; gap: 20px; z-index: 6;
+  }
+
+  /* ---- 칸 토큰 (스티커/자갈) ---- */
+  .cell {
+    position: absolute; width: 96px; height: 96px; margin: -48px 0 0 -48px;
+    display: grid; place-items: center; border-radius: var(--r-token);
+    border: var(--bd-thick) solid var(--edge);
+    background:
+      radial-gradient(circle at 38% 30%, rgba(255,255,255,.65), rgba(255,255,255,0) 55%),
+      var(--fill);
+    box-shadow: var(--sh-token);
+    transform: rotate(var(--tilt, 0deg));
+    z-index: 4;
+  }
+  .cell .glyph { font-size: 40px; line-height: 1; filter: drop-shadow(0 1px 0 rgba(0,0,0,.12)); }
+  .cell .num {
+    position: absolute; top: -16px; left: -14px;
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--paper); border: 3px solid var(--edge); color: var(--deep);
+    font-family: var(--font-display); font-size: 22px; display: grid; place-items: center;
+    box-shadow: 0 3px 0 rgba(74,59,42,.18);
+  }
+  .cell.t-word    { --fill: var(--word-fill);    --edge: var(--word-edge);    --deep: var(--word-deep); }
+  .cell.t-share   { --fill: var(--share-fill);   --edge: var(--share-edge);   --deep: var(--share-deep); }
+  .cell.t-mission { --fill: var(--mission-fill); --edge: var(--mission-edge); --deep: var(--mission-deep); }
+  .cell.t-event   { --fill: var(--event-fill);   --edge: var(--event-edge);   --deep: var(--event-deep); }
+
+  /* ---- 동물 말 (종이 인형 스탠드) ---- */
+  .piece {
+    position: absolute; width: 110px; height: 130px; margin: -126px 0 0 -55px;
+    z-index: 7; transform-origin: bottom center;
+    animation: bob 2.6s var(--ease-pop) infinite;
+  }
+  .piece .disc {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 70px; height: 22px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(74,59,42,.34), rgba(74,59,42,0) 70%);
+  }
+  .piece .stand {
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    width: 90px; height: 100px; border-radius: 46px 46px 22px 22px;
+    background: linear-gradient(180deg, var(--paper), #f4e9d6);
+    border: 5px solid #fff; box-shadow: var(--sh-pop);
+    display: grid; place-items: center;
+  }
+  .piece .face { font-size: 56px; line-height: 1; transform: translateY(-2px); }
+  .piece.current .stand { border-color: var(--ark-gold); box-shadow: 0 0 0 6px rgba(232,163,61,.35), var(--sh-pop); }
+  .piece.current::after {
+    content: "지금 차례!"; position: absolute; top: -34px; left: 50%; transform: translateX(-50%);
+    font-family: var(--font-display); font-size: 20px; color: #fff; white-space: nowrap;
+    background: var(--ark-gold); padding: 4px 14px; border-radius: 14px;
+    border: 3px solid #fff; box-shadow: var(--sh-soft);
+  }
+  @keyframes bob { 0%,100%{ transform: translateY(0) rotate(-1.5deg);} 50%{ transform: translateY(-9px) rotate(1.5deg);} }
+
+  /* 도착(방주) 동물 미니 */
+  .arrived { position: absolute; font-size: 44px; z-index: 7; filter: drop-shadow(0 4px 4px rgba(74,59,42,.35)); }
+
+  /* START 표지 + 노아 */
+  .start-sign {
+    position: absolute; left: 64px; top: 470px; z-index: 6; text-align: center;
+  }
+  .start-sign .plank {
+    font-family: var(--font-display); font-size: 38px; color: #fff;
+    background: linear-gradient(180deg,#9c6a35,#7a4f24); padding: 12px 30px;
+    border-radius: 16px; border: 5px solid #5e3a1b; box-shadow: var(--sh-pop);
+    transform: rotate(-4deg);
+  }
+  .start-sign .noah { font-size: 92px; margin-top: 8px; filter: drop-shadow(0 6px 5px rgba(74,59,42,.35)); animation: bob 3s ease-in-out infinite; }
+
+  /* 종류 범례 */
+  .legend {
+    position: absolute; left: 50px; bottom: 34px; z-index: 6; display: flex; gap: 14px;
+    background: rgba(255,251,243,.86); border: 4px solid #fff; border-radius: 20px;
+    padding: 14px 20px; box-shadow: var(--sh-soft); backdrop-filter: blur(2px);
+  }
+  .legend .item { display: flex; align-items: center; gap: 9px; white-space:nowrap; font-family: var(--font-display); font-size: 24px; color: var(--ink); }
+  .legend .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 18px; border: 4px solid var(--e); background: var(--f); }
+
+  /* ====================== 우측 패널 컴포넌트 ====================== */
+  .panel-card {
+    background: var(--paper); border-radius: var(--r-card); border: 5px solid #fff;
+    box-shadow: var(--sh-deep); padding: 18px 20px; position: relative;
+  }
+  .panel-head { display: flex; align-items: center; gap: 12px; }
+  .logo-mark { width: 56px; height: 56px; flex: none; }
+  .logo-txt { font-family: var(--font-display); line-height: 1.12; min-width: 0; }
+  .logo-txt b { display: block; font-size: 24px; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.25); white-space: nowrap; }
+  .logo-txt span { font-size: 17px; color: #ffe9c4; }
+
+  .room-chip {
+    margin-left: auto; background: var(--paper); border: 4px solid var(--ark-gold);
+    border-radius: 16px; padding: 6px 14px; text-align: center; box-shadow: var(--sh-soft);
+  }
+  .room-chip small { display: block; font-size: 14px; color: var(--ink-soft); }
+  .room-chip b { font-family: var(--font-display); font-size: 30px; letter-spacing: 3px; color: var(--ink); }
+
+  /* 비 페이즈 / D-카운터 */
+  .rain-card { background: linear-gradient(180deg,#e6eef6,#d3e0ee); border-color:#fff; text-align: center; overflow: hidden; }
+  .rain-card .label { font-family: var(--font-display); font-size: 26px; color:#4f6680; }
+  .rain-card .dcount { font-family: var(--font-display); font-size: 76px; line-height:.9; color: var(--rain); }
+  .rain-card .dcount span { font-size: 30px; color:#6b819c; }
+  .rain-card .drops { position:absolute; inset:0; pointer-events:none; }
+  .rain-card .drops i { position:absolute; top:-10px; width:6px; height:14px; border-radius:60%;
+    background:#9fb6d1; opacity:.6; animation: fall 1.6s linear infinite; }
+  @keyframes fall { to { transform: translateY(130px); opacity:0; } }
+
+  /* 차례 카드 */
+  .turn-card { background: linear-gradient(180deg,#fff5e2,#ffe9c4); border-color:#fff; display:flex; align-items:center; gap:16px; }
+  .turn-card .big { font-size: 72px; filter: drop-shadow(0 4px 3px rgba(74,59,42,.3)); animation: bob 2.4s ease-in-out infinite; }
+  .turn-card .meta b { display:block; font-family: var(--font-display); font-size: 38px; color: var(--ark-deep); }
+  .turn-card .meta span { font-size: 22px; color: var(--ink-soft); }
+
+  /* 순위/진행 리스트 */
+  .panel-title { font-family: var(--font-display); font-size: 24px; color:#fff; margin: 2px 0 -6px 4px; text-shadow: 0 2px 0 rgba(0,0,0,.2); }
+  .roster { display:flex; flex-direction:column; gap: 10px; }
+  .roster .row { display:flex; align-items:center; gap: 12px; }
+  .roster .av { width: 52px; height: 52px; flex:none; border-radius: 50%; display:grid; place-items:center;
+    font-size: 30px; background: var(--paper); border: 4px solid #fff; box-shadow: var(--sh-soft); }
+  .roster .name { font-family: var(--font-display); font-size: 24px; color: var(--ink); width: 70px; }
+  .roster .track { flex:1; height: 18px; border-radius: 12px; background:#efe3cf; border:2px solid #fff; overflow:hidden; box-shadow: inset 0 2px 4px rgba(74,59,42,.18); }
+  .roster .fill { height:100%; border-radius: 10px; background: linear-gradient(90deg,var(--grace),var(--ark-gold)); }
+  .roster .step { font-family: var(--font-display); font-size: 22px; color:#fff; width: 70px; text-align:right; }
+
+  /* 인벤토리 (육각 토큰 슬롯) */
+  .inv { display:flex; gap: 12px; flex-wrap: wrap; }
+  .hex {
+    width: 64px; height: 72px; display:grid; place-items:center; font-size: 30px;
+    background: var(--grace); color:#fff;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    filter: drop-shadow(0 5px 3px rgba(74,59,42,.3));
+  }
+  .hex.empty { background:#d8c7ad; }
+  .inv-label { font-family: var(--font-display); font-size: 22px; color:#ffe9c4; align-self:center; }
+</style>
+</head>
+<body>
+<div class="tv-stage">
+  <div class="tv-canvas">
+    <div class="board-root paper-noise" data-screen-label="호스트·보드">
+
+      <!-- ===================== 풍경 배경 ===================== -->
+      <div class="scape">
+        <svg viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0"   stop-color="#BFE3F2"/>
+              <stop offset=".55" stop-color="#E8F4F0"/>
+              <stop offset="1"   stop-color="#F8CFAE"/>
+            </linearGradient>
+            <linearGradient id="ground" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0"   stop-color="#DDEBC8"/>
+              <stop offset=".4"  stop-color="#F0E2C2"/>
+              <stop offset=".7"  stop-color="#F5D9A8"/>
+              <stop offset="1"   stop-color="#F8CFAE"/>
+            </linearGradient>
+            <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stop-color="#FFF6D8"/>
+              <stop offset="1" stop-color="#FFE9A8" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="hullg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#D9A86A"/>
+              <stop offset="1" stop-color="#B07C3E"/>
+            </linearGradient>
+            <linearGradient id="river" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#BfE3F2"/>
+              <stop offset="1" stop-color="#9FCBE6"/>
+            </linearGradient>
+          </defs>
+
+          <!-- 하늘 -->
+          <rect width="1920" height="1080" fill="url(#sky)"/>
+          <!-- 해 + 햇살 -->
+          <circle cx="240" cy="170" r="220" fill="url(#sun)"/>
+          <circle cx="240" cy="170" r="78" fill="#FFE07A"/>
+          <g stroke="#FFE07A" stroke-width="14" stroke-linecap="round" opacity=".7">
+            <line x1="240" y1="40"  x2="240" y2="-10"/>
+            <line x1="120" y1="90"  x2="86"  y2="56"/>
+            <line x1="360" y1="90"  x2="394" y2="56"/>
+            <line x1="70"  y1="200" x2="22"  y2="200"/>
+          </g>
+
+          <!-- 무지개 아치 (방주 위, 부드럽게) -->
+          <g fill="none" stroke-width="20" opacity=".55">
+            <path d="M1180 540 A 430 430 0 0 1 1900 540" stroke="#E58B8B"/>
+            <path d="M1208 552 A 402 402 0 0 1 1872 552" stroke="#E6B36A"/>
+            <path d="M1236 564 A 374 374 0 0 1 1844 564" stroke="#E6D673"/>
+            <path d="M1264 576 A 346 346 0 0 1 1816 576" stroke="#94C97E"/>
+            <path d="M1292 588 A 318 318 0 0 1 1788 588" stroke="#7FB6D6"/>
+            <path d="M1320 600 A 290 290 0 0 1 1760 600" stroke="#9C8FD0"/>
+          </g>
+
+          <!-- 구름 -->
+          <g fill="#FFFFFF" opacity=".92">
+            <g><ellipse cx="720" cy="150" rx="120" ry="48"/><ellipse cx="800" cy="130" rx="80" ry="46"/><ellipse cx="650" cy="160" rx="70" ry="40"/></g>
+            <g opacity=".8"><ellipse cx="1180" cy="120" rx="110" ry="44"/><ellipse cx="1250" cy="138" rx="70" ry="38"/></g>
+            <g opacity=".7"><ellipse cx="430" cy="250" rx="86" ry="34"/><ellipse cx="490" cy="240" rx="56" ry="30"/></g>
+          </g>
+
+          <!-- 먼 언덕 -->
+          <path d="M0 560 Q 300 470 620 540 T 1240 520 T 1920 560 V1080 H0 Z" fill="#C6DDA8"/>
+          <!-- 땅 -->
+          <path d="M0 660 Q 480 580 980 650 T 1920 660 V1080 H0 Z" fill="url(#ground)"/>
+          <!-- 앞쪽 둔덕 -->
+          <path d="M0 820 Q 360 760 760 820 T 1920 840 V1080 H0 Z" fill="#CFE3AE" opacity=".85"/>
+
+          <!-- 강 (우하단, 부드러운 물길 — 공포 X) -->
+          <path d="M1180 980 Q 1340 860 1560 900 Q 1760 936 1920 880 L1920 1080 L1180 1080 Z" fill="url(#river)" opacity=".9"/>
+          <path d="M1280 980 Q 1440 906 1640 940" stroke="#E8F4F8" stroke-width="6" fill="none" opacity=".7" stroke-linecap="round"/>
+
+          <!-- 나무들 (둥글둥글) -->
+          <g>
+            <g transform="translate(120 760)"><rect x="-12" y="0" width="24" height="60" rx="8" fill="#9C6B3E"/><circle cx="0" cy="-18" r="56" fill="#8FBF6B"/><circle cx="-34" cy="6" r="38" fill="#9FCB78"/><circle cx="34" cy="4" r="40" fill="#7FB05E"/></g>
+            <g transform="translate(560 700) scale(.8)"><rect x="-12" y="0" width="24" height="60" rx="8" fill="#9C6B3E"/><circle cx="0" cy="-18" r="56" fill="#7FB05E"/><circle cx="-32" cy="8" r="36" fill="#8FBF6B"/></g>
+            <g transform="translate(980 720) scale(.7)"><rect x="-12" y="0" width="24" height="60" rx="8" fill="#9C6B3E"/><circle cx="0" cy="-18" r="56" fill="#9FCB78"/><circle cx="34" cy="6" r="38" fill="#7FB05E"/></g>
+          </g>
+
+          <!-- 작은 데코: 꽃 / 잎 / 발자국 -->
+          <g opacity=".9">
+            <g transform="translate(300 940)"><circle r="9" fill="#F4B8C4"/><circle cx="14" r="9" fill="#F4B8C4"/><circle cx="7" cy="-12" r="9" fill="#F4B8C4"/><circle cx="7" cy="12" r="9" fill="#F4B8C4"/><circle cx="7" cy="0" r="7" fill="#F6D873"/></g>
+            <g transform="translate(700 960)"><circle r="9" fill="#CDB8F0"/><circle cx="14" r="9" fill="#CDB8F0"/><circle cx="7" cy="-12" r="9" fill="#CDB8F0"/><circle cx="7" cy="12" r="9" fill="#CDB8F0"/><circle cx="7" cy="0" r="7" fill="#F6D873"/></g>
+          </g>
+        </svg>
+      </div>
+
+      <!-- ===================== 방주 일러스트 ===================== -->
+      <div style="position:absolute; right:520px; top:150px; width:540px; height:420px; z-index:5; filter: drop-shadow(0 18px 22px rgba(74,59,42,.3));">
+        <svg viewBox="0 0 540 420" width="540" height="420" xmlns="http://www.w3.org/2000/svg">
+          <!-- 글로우 -->
+          <ellipse cx="270" cy="250" rx="280" ry="150" fill="#FFE9A8" opacity=".5"/>
+          <!-- 선체 -->
+          <path d="M40 250 Q 270 360 500 250 L470 330 Q 270 410 70 330 Z" fill="url(#hullg)" stroke="#8A5A2E" stroke-width="8" stroke-linejoin="round"/>
+          <g stroke="#9C6B3E" stroke-width="5" opacity=".7"><path d="M70 300 Q 270 372 470 300" fill="none"/><path d="M60 278 Q 270 350 480 278" fill="none"/></g>
+          <!-- 갑판 위 캐빈 -->
+          <rect x="120" y="120" width="300" height="140" rx="20" fill="#E7C68C" stroke="#8A5A2E" stroke-width="8"/>
+          <g stroke="#B8915A" stroke-width="4" opacity=".8"><line x1="130" y1="160" x2="410" y2="160"/><line x1="130" y1="200" x2="410" y2="200"/></g>
+          <!-- 지붕 -->
+          <path d="M104 124 L270 56 L436 124 Z" fill="#C8763E" stroke="#8A5A2E" stroke-width="8" stroke-linejoin="round"/>
+          <circle cx="270" cy="92" r="12" fill="#FFE07A" stroke="#8A5A2E" stroke-width="5"/>
+          <!-- 방주 문 (아치, 활짝) -->
+          <path d="M232 260 V190 a38 38 0 0 1 76 0 V260 Z" fill="#FFF6D8" stroke="#8A5A2E" stroke-width="7"/>
+          <path d="M270 260 V190" stroke="#C9A227" stroke-width="4"/>
+          <!-- 깃발 -->
+          <line x1="270" y1="56" x2="270" y2="20" stroke="#8A5A2E" stroke-width="5"/>
+          <path d="M270 24 L320 34 L270 46 Z" fill="#E8A33D"/>
+        </svg>
+        <!-- 방주에 도착한 동물들 (갑판 위 빼꼼) -->
+        <div class="arrived" style="left:175px; top:96px;">🦁</div>
+        <div class="arrived" style="left:240px; top:88px;">🐘</div>
+        <div class="arrived" style="left:312px; top:96px;">🦒</div>
+      </div>
+
+      <!-- ===================== START + 노아 ===================== -->
+      <div class="start-sign">
+        <div class="plank">START</div>
+        <div class="noah">🧔🏻</div>
+      </div>
+
+      <!-- ===================== 트랙(사행 경로 + 칸) ===================== -->
+      <svg class="play-area" viewBox="0 0 1480 1080" style="z-index:3;" xmlns="http://www.w3.org/2000/svg" id="path-svg">
+        <path id="track-path" fill="none" stroke="#C8A86E" stroke-width="46" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>
+        <path id="track-path2" fill="none" stroke="#E9D3A6" stroke-width="30" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 40" opacity=".8"/>
+      </svg>
+      <div class="play-area" id="cells" style="z-index:4;"></div>
+      <div class="play-area" id="pieces" style="z-index:7;"></div>
+
+      <!-- 범례 -->
+      <div class="legend">
+        <div class="item"><span class="dot" style="--f:var(--word-fill);--e:var(--word-edge)">📖</span>말씀</div>
+        <div class="item"><span class="dot" style="--f:var(--share-fill);--e:var(--share-edge)">💬</span>나눔</div>
+        <div class="item"><span class="dot" style="--f:var(--mission-fill);--e:var(--mission-edge)">⭐</span>미션</div>
+        <div class="item"><span class="dot" style="--f:var(--event-fill);--e:var(--event-edge)">⚡</span>이벤트</div>
+      </div>
+
+      <!-- ===================== 우측 점수판 ===================== -->
+      <div class="status-panel paper-noise">
+        <div class="panel-head">
+          <svg class="logo-mark" viewBox="0 0 56 56"><path d="M6 30 Q28 44 50 30 L46 40 Q28 50 10 40 Z" fill="#E7C68C" stroke="#5e3a1b" stroke-width="3"/><path d="M14 16 L42 16 L28 6 Z" fill="#C8763E" stroke="#5e3a1b" stroke-width="3"/><rect x="14" y="16" width="28" height="14" fill="#E7C68C" stroke="#5e3a1b" stroke-width="3"/></svg>
+          <div class="logo-txt"><b>방주로 가는 길</b><span>Road to the Ark</span></div>
+          <div class="room-chip"><small>방 코드</small><b>NOAH</b></div>
+        </div>
+
+        <!-- 비 페이즈 / D-카운터 -->
+        <div class="panel-card rain-card">
+          <div class="drops"><i style="left:14%"></i><i style="left:34%;animation-delay:.4s"></i><i style="left:58%;animation-delay:.8s"></i><i style="left:78%;animation-delay:.2s"></i><i style="left:90%;animation-delay:.6s"></i></div>
+          <div class="label">☂︎ 비가 시작됐어요 · 방주까지</div>
+          <div class="dcount">D-5<span> 일</span></div>
+        </div>
+
+        <!-- 현재 차례 -->
+        <div class="panel-card turn-card">
+          <div class="big">🦊</div>
+          <div class="meta"><b>여우의 차례</b><span>주사위를 굴려 주세요!</span></div>
+        </div>
+
+        <!-- 진행 현황 -->
+        <div class="panel-title">친구들 현황</div>
+        <div class="panel-card roster">
+          <div class="row"><div class="av">🦊</div><div class="name">여우</div><div class="track"><div class="fill" style="width:46%"></div></div><div class="step">14 / 30</div></div>
+          <div class="row"><div class="av">🐘</div><div class="name">코끼리</div><div class="track"><div class="fill" style="width:100%;background:var(--ark-gold)"></div></div><div class="step">방주 ⛵</div></div>
+          <div class="row"><div class="av">🐰</div><div class="name">토끼</div><div class="track"><div class="fill" style="width:30%"></div></div><div class="step">9 / 30</div></div>
+          <div class="row"><div class="av">🐑</div><div class="name">양</div><div class="track"><div class="fill" style="width:66%"></div></div><div class="step">20 / 30</div></div>
+        </div>
+
+        <!-- 은혜 토큰 인벤토리 -->
+        <div class="panel-title">은혜 토큰</div>
+        <div class="panel-card" style="background:rgba(255,251,243,.92)">
+          <div class="inv">
+            <div class="hex">🌿</div>
+            <div class="hex">🌿</div>
+            <div class="hex">🌿</div>
+            <div class="hex empty"></div>
+            <div class="hex empty"></div>
+            <div class="inv-label" style="color:var(--ink-soft); white-space:nowrap;">친구를 +1칸<br>초청할 수 있어요</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---- 1920×1080 캔버스를 뷰포트에 맞춰 스케일 ---- */
+function fitStage(){
+  const c = document.querySelector('.tv-canvas');
+  const s = Math.min(window.innerWidth/1920, window.innerHeight/1080);
+  c.style.transform = `scale(${s})`;
+}
+window.addEventListener('resize', fitStage); fitStage();
+
+/* ---- 사행(snake) 트랙: 5행×6열 boustrophedon + 칸/경로 생성 ---- */
+const COLS=6, ROWS=5, N=30;
+const X0=210, X1=1300, Y0=300, Y1=900;
+const colX = i => X0 + (X1-X0)*(i/(COLS-1));
+const rowY = r => Y0 + (Y1-Y0)*(r/(ROWS-1));
+function stepPos(step){            // step 1..30
+  const idx = step-1;
+  const row = Math.floor(idx/COLS);
+  let col = idx%COLS;
+  if(row%2===1) col = COLS-1-col;  // 역방향 행
+  // 살짝 유기적 흔들림
+  const jx = Math.sin(step*1.7)*16, jy = Math.cos(step*2.3)*14;
+  return { x: colX(col)+jx, y: rowY(row)+jy };
+}
+// 칸 종류 분포: WORD10 / SHARE8 / MISSION7 / EVENT5 (브리프 고정)
+const TYPES = ['word','share','mission','event'];
+const GLYPH = {word:'📖', share:'💬', mission:'⭐', event:'⚡'};
+const layout = ['word','share','mission','word','event','share',
+                'word','mission','share','word','event','mission',
+                'word','share','word','mission','share','event',
+                'word','mission','share','word','event','mission',
+                'word','share','mission','word','share','event']; // 10/8/7/5
+
+const cellsEl = document.getElementById('cells');
+const pts = [];
+for(let s=1;s<=N;s++){
+  const p = stepPos(s); pts.push(p);
+  const t = layout[s-1];
+  const el = document.createElement('div');
+  el.className = `cell t-${t}`;
+  el.style.left = p.x+'px'; el.style.top = p.y+'px';
+  el.style.setProperty('--tilt', ((s*37)%13-6)+'deg');
+  el.innerHTML = `<span class="num">${s}</span><span class="glyph">${GLYPH[t]}</span>`;
+  cellsEl.appendChild(el);
+}
+
+/* 경로 path (칸 중심을 부드럽게 잇기) */
+function smoothPath(points){
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for(let i=0;i<points.length-1;i++){
+    const p=points[i], n=points[i+1];
+    const mx=(p.x+n.x)/2, my=(p.y+n.y)/2;
+    d += ` Q ${p.x} ${p.y} ${mx} ${my}`;
+  }
+  const last=points[points.length-1];
+  d += ` T ${last.x} ${last.y}`;
+  return d;
+}
+const startPt={x:150,y:540};
+const arkPt={x:1380,y:300};
+const full=[startPt,...pts,arkPt];
+const d=smoothPath(full);
+document.getElementById('track-path').setAttribute('d',d);
+document.getElementById('track-path2').setAttribute('d',d);
+
+/* ---- 동물 말 배치 ---- */
+const piecesEl=document.getElementById('pieces');
+function placePiece(step, face, current){
+  const p = stepPos(step);
+  const el=document.createElement('div');
+  el.className='piece'+(current?' current':'');
+  el.style.left=p.x+'px'; el.style.top=p.y+'px';
+  el.innerHTML=`<div class="disc"></div><div class="stand"><div class="face">${face}</div></div>`;
+  piecesEl.appendChild(el);
+}
+placePiece(14,'🦊',true);
+placePiece(9,'🐰',false);
+placePiece(20,'🐑',false);
+</script>
+</body>
+</html>

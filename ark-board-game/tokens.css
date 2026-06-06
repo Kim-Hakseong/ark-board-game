@@ -1,0 +1,90 @@
+/* ============================================================
+   방주로 가는 길 — 비주얼 오버홀 디자인 토큰
+   (브리프 §4, §10A 기준 — 그대로 src/index.css 로 이식 가능)
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Jua&family=Gamja+Flower&display=swap');
+
+:root {
+  /* ---- 베이스 ---- */
+  --bg-cream: #FDF6EC;
+  --paper:    #FFFBF3;
+  --ink:      #4A3B2A;
+  --ink-soft: #7A6850;
+
+  /* ---- 칸 종류 4종 (fill / edge / 글리프) ---- */
+  --word-fill:    #CDE4F2;  --word-edge:    #5B8DB8;  --word-deep:    #3C6E96;
+  --share-fill:   #FAE8B4;  --share-edge:   #C9A227;  --share-deep:   #A8851A;
+  --mission-fill: #F6CFC4;  --mission-edge: #C96A4E;  --mission-deep: #A8543B;
+  --event-fill:   #E3D4F0;  --event-edge:   #8E6FB8;  --event-deep:   #6F529A;
+
+  /* ---- 강조 ---- */
+  --ark-gold:  #E8A33D;
+  --ark-deep:  #C97F1E;
+  --grace:     #7FB069;
+  --grace-deep:#5E8C4C;
+  --rain:      #8FA3BF;
+
+  /* ---- 풍경 그라데이션 좌→우 4구역 ---- */
+  --zone-field:  #DDEBC8;
+  --zone-dry:    #F0E2C2;
+  --zone-march:  #F5D9A8;
+  --zone-sky:    #F8CFAE;
+  --sky-top:     #BFE3F2;
+  --sky-mid:     #E8F4F0;
+
+  /* ---- 타이포 스케일 (TV 1920 기준) ---- */
+  --font-display: 'Jua', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-hand:    'Gamja Flower', 'Jua', sans-serif;
+  --font-body:    'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --t-hero:    88px;
+  --t-title:   56px;
+  --t-sub:     40px;
+  --t-body:    30px;
+  --t-cell:    34px;   /* 칸 번호 */
+  --t-small:   24px;
+  --t-dcount:  120px;  /* D-카운터 */
+
+  /* ---- 보더 / 라운드 ---- */
+  --bd-thick: 6px;
+  --bd-med:   4px;
+  --r-token:  50%;
+  --r-card:   28px;
+  --r-chip:   18px;
+
+  /* ---- 그림자 (소프트 / 깊은 / 입체) ---- */
+  --sh-soft:  0 6px 16px rgba(74,59,42,.16);
+  --sh-deep:  0 14px 32px rgba(74,59,42,.26);
+  --sh-pop:   0 10px 0 rgba(74,59,42,.18), 0 18px 30px rgba(74,59,42,.22);
+  --sh-token: 0 5px 0 rgba(74,59,42,.20), 0 10px 14px rgba(74,59,42,.18);
+
+  /* ---- 모션 ---- */
+  --ease-pop: cubic-bezier(.34,1.56,.64,1);
+  --dur-fast: .22s;
+  --dur-med:  .42s;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: var(--font-body); color: var(--ink); -webkit-font-smoothing: antialiased; }
+
+/* 종이 질감 노이즈 (외부 이미지 금지 → SVG fractalNoise data-uri) */
+.paper-noise::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  opacity: .05; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}
+
+/* ---- TV 화면 공통: 1920×1080 고정 캔버스를 뷰포트에 맞춰 스케일 ---- */
+.tv-stage {
+  position: fixed; inset: 0; background: #2b2418;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.tv-canvas {
+  width: 1920px; height: 1080px; position: relative; flex: none;
+  transform-origin: center center;
+}

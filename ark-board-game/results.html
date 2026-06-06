@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>방주로 가는 길 — 결과</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .res-root { position:absolute; inset:0; overflow:hidden; }
+  .scape { position:absolute; inset:0; } .scape svg { width:100%; height:100%; display:block; }
+
+  /* 타이틀 */
+  .res-title { position:absolute; top: 44px; left:50%; transform:translateX(-50%); text-align:center; z-index:6; }
+  .res-title .kicker { font-family: var(--font-display); font-size: 26px; color:#fff; background: var(--grace); white-space:nowrap;
+    padding: 6px 22px; border-radius: 16px; border:4px solid #fff; box-shadow: var(--sh-soft); display:inline-block; transform: rotate(-1.5deg); }
+  .res-title h1 { margin: 12px 0 0; font-family: var(--font-display); font-size: 80px; color: var(--ark-deep); line-height:1; white-space:nowrap;
+    -webkit-text-stroke: 7px #fff; paint-order: stroke fill; text-shadow: 0 7px 0 rgba(201,127,30,.35), 0 12px 16px rgba(74,59,42,.25); }
+
+  /* 방주 + 갑판 동물 줄 */
+  .ark-stage { position:absolute; left:50%; top: 200px; transform: translateX(-50%); width: 1180px; height: 360px; z-index:5; }
+  .deck-row { position:absolute; left:0; right:0; top: 44px; display:flex; justify-content:center; gap: 6px; z-index:6; }
+  .deck-row .a { font-size: 70px; filter: drop-shadow(0 5px 4px rgba(74,59,42,.3)); animation: wave 2.4s ease-in-out infinite; }
+  .deck-row .a:nth-child(odd){ animation-delay:.3s; }
+  @keyframes wave { 0%,100%{ transform: translateY(0) rotate(-3deg);} 50%{ transform: translateY(-10px) rotate(3deg);} }
+  .ark-stage svg { position:absolute; inset:0; width:100%; height:100%; filter: drop-shadow(0 16px 18px rgba(74,59,42,.28)); }
+
+  /* 메달 포디움 */
+  .podium { position:absolute; left:50%; bottom: 196px; transform:translateX(-50%); z-index:7;
+    display:flex; align-items:flex-end; gap: 30px; }
+  .medal-card { background: var(--paper); border-radius: 26px; border: 6px solid #fff; box-shadow: var(--sh-deep);
+    width: 230px; padding: 22px 18px 20px; text-align:center; position:relative; }
+  .medal-card .rank { position:absolute; top:-30px; left:50%; transform:translateX(-50%);
+    width:62px; height:62px; border-radius:50%; display:grid; place-items:center; font-size: 34px;
+    border: 5px solid #fff; box-shadow: var(--sh-soft); }
+  .medal-card .face { font-size: 72px; filter: drop-shadow(0 4px 3px rgba(74,59,42,.3)); }
+  .medal-card .nm { font-family: var(--font-display); font-size: 34px; color: var(--ink); margin-top: 2px; }
+  .medal-card .role { font-family: var(--font-body); font-size: 20px; color: var(--ink-soft); margin-top: 2px; }
+  .medal-card .score { margin-top: 10px; font-family: var(--font-display); font-size: 22px; color: var(--ark-deep);
+    background: linear-gradient(180deg,#fff5e2,#ffe9c4); border-radius: 14px; padding: 6px 4px; border:3px solid var(--ark-gold); }
+  .medal-card.first { width: 270px; padding-top: 30px; transform: translateY(-26px); border-color: var(--ark-gold); }
+  .medal-card.first .face { font-size: 92px; }
+  .rank.g { background: linear-gradient(180deg,#FFE08A,#E8A33D); }
+  .rank.s { background: linear-gradient(180deg,#EAEef2,#B9C4cf); }
+  .rank.b { background: linear-gradient(180deg,#F0CBA0,#C98E54); }
+
+  /* 마무리 메시지 리본 */
+  .verse {
+    position:absolute; left:50%; bottom: 28px; transform:translateX(-50%); z-index:7;
+    width: 1500px; background: var(--paper); border-radius: 24px; border:6px solid #fff;
+    box-shadow: var(--sh-deep); padding: 22px 48px; text-align:center;
+  }
+  .verse .lead { font-family: var(--font-display); font-size: 30px; color: var(--ark-deep); }
+  .verse .body { font-family: var(--font-body); font-size: 25px; color: var(--ink); line-height: 1.5; margin-top: 6px; }
+  .verse .ref { color: var(--grace-deep); font-weight: 700; }
+
+  /* confetti */
+  .confetti { position:absolute; inset:0; pointer-events:none; z-index:8; overflow:hidden; }
+  .confetti i { position:absolute; top:-20px; width:14px; height:18px; border-radius:3px; opacity:.9;
+    animation: drop linear infinite; }
+  @keyframes drop { to { transform: translateY(1120px) rotate(540deg); } }
+</style>
+</head>
+<body>
+<div class="tv-stage">
+  <div class="tv-canvas">
+    <div class="res-root paper-noise" data-screen-label="호스트·결과">
+
+      <!-- 배경 -->
+      <div class="scape">
+        <svg viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="sky3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CFEAF6"/><stop offset="1" stop-color="#FBEAD2"/></linearGradient>
+            <radialGradient id="sun3" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FFF6D8"/><stop offset="1" stop-color="#FFE9A8" stop-opacity="0"/></radialGradient>
+            <linearGradient id="water3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BFE3F2"/><stop offset="1" stop-color="#A6D0E8"/></linearGradient>
+            <linearGradient id="hull3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9A86A"/><stop offset="1" stop-color="#B07C3E"/></linearGradient>
+          </defs>
+          <rect width="1920" height="1080" fill="url(#sky3)"/>
+          <circle cx="960" cy="300" r="320" fill="url(#sun3)"/>
+          <!-- 큰 무지개 아치 -->
+          <g fill="none" stroke-width="34" opacity=".7">
+            <path d="M160 760 A 800 800 0 0 1 1760 760" stroke="#E58B8B"/>
+            <path d="M204 766 A 756 756 0 0 1 1716 766" stroke="#E6A35C"/>
+            <path d="M248 772 A 712 712 0 0 1 1672 772" stroke="#E6D673"/>
+            <path d="M292 778 A 668 668 0 0 1 1628 778" stroke="#94C97E"/>
+            <path d="M336 784 A 624 624 0 0 1 1584 784" stroke="#7FB6D6"/>
+            <path d="M380 790 A 580 580 0 0 1 1540 790" stroke="#9C8FD0"/>
+          </g>
+          <g fill="#fff" opacity=".9"><ellipse cx="320" cy="220" rx="120" ry="46"/><ellipse cx="400" cy="200" rx="76" ry="40"/><ellipse cx="1560" cy="240" rx="110" ry="44"/><ellipse cx="1640" cy="220" rx="70" ry="36"/></g>
+          <!-- 잔잔한 물 -->
+          <path d="M0 720 Q 480 680 960 716 T 1920 720 V1080 H0 Z" fill="url(#water3)"/>
+          <g stroke="#E8F4F8" stroke-width="5" fill="none" opacity=".7" stroke-linecap="round">
+            <path d="M180 820 Q 280 800 380 820"/><path d="M1480 860 Q 1580 840 1680 860"/><path d="M700 900 Q 820 878 940 900"/>
+          </g>
+        </svg>
+      </div>
+
+      <!-- 타이틀 -->
+      <div class="res-title">
+        <span class="kicker">모두 무사히 도착했어요</span>
+        <h1>다 함께 방주로!</h1>
+      </div>
+
+      <!-- 방주 + 갑판 동물 -->
+      <div class="ark-stage">
+        <div class="deck-row" id="deck"></div>
+        <svg viewBox="0 0 1180 360" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="590" cy="240" rx="560" ry="120" fill="#FFE9A8" opacity=".45"/>
+          <!-- 선체 -->
+          <path d="M40 150 Q 590 300 1140 150 L1070 290 Q 590 360 110 290 Z" fill="url(#hull3)" stroke="#8A5A2E" stroke-width="9" stroke-linejoin="round"/>
+          <g stroke="#9C6B3E" stroke-width="6" opacity=".7"><path d="M120 250 Q 590 322 1060 250" fill="none"/><path d="M90 210 Q 590 290 1090 210" fill="none"/></g>
+          <!-- 갑판 난간 -->
+          <rect x="150" y="120" width="880" height="40" rx="14" fill="#E7C68C" stroke="#8A5A2E" stroke-width="7"/>
+          <g stroke="#8A5A2E" stroke-width="6"><line x1="250" y1="120" x2="250" y2="160"/><line x1="400" y1="120" x2="400" y2="160"/><line x1="590" y1="120" x2="590" y2="160"/><line x1="780" y1="120" x2="780" y2="160"/><line x1="930" y1="120" x2="930" y2="160"/></g>
+          <!-- 깃발 -->
+          <line x1="590" y1="120" x2="590" y2="60" stroke="#8A5A2E" stroke-width="6"/>
+          <path d="M590 64 L660 78 L590 92 Z" fill="#E8A33D"/>
+        </svg>
+      </div>
+
+      <!-- 포디움 -->
+      <div class="podium">
+        <div class="medal-card second">
+          <div class="rank s">🥈</div>
+          <div class="face">🐘</div>
+          <div class="nm">코끼리</div>
+          <div class="role">도윤</div>
+          <div class="score">28점 · 도착 2등</div>
+        </div>
+        <div class="medal-card first">
+          <div class="rank g">🥇</div>
+          <div class="face">🐑</div>
+          <div class="nm">양</div>
+          <div class="role">하은 · 첫 초청자</div>
+          <div class="score">34점 · 친구 3명 초청</div>
+        </div>
+        <div class="medal-card third">
+          <div class="rank b">🥉</div>
+          <div class="face">🦊</div>
+          <div class="nm">여우</div>
+          <div class="role">지민</div>
+          <div class="score">25점 · 도착 3등</div>
+        </div>
+      </div>
+
+      <!-- 마무리 메시지 (PRD §6.5 — 글자 단위 보존) -->
+      <div class="verse">
+        <div class="lead">방주 문은 정확한 때에만 열렸습니다.</div>
+        <div class="body">구원의 문이 열려 있는 지금 — 먼저 들어간 사람의 역할은 구경이 아니라 초청입니다.<br>
+        <span class="ref">(벧후 3:9 — 아무도 멸망치 않고 다 회개하기에 이르기를 원하시느니라)</span></div>
+      </div>
+
+      <div class="confetti" id="confetti"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function fitStage(){ const c=document.querySelector('.tv-canvas'); const s=Math.min(innerWidth/1920,innerHeight/1080); c.style.transform=`scale(${s})`; }
+addEventListener('resize',fitStage); fitStage();
+
+/* 갑판 동물 줄세움 (16종 중 도착 순) */
+const DECK=['🕊️','🐑','🐘','🦊','🦁','🐰','🦒','🐻','🐯','🦌','🐢','🐮','🐷','🐔'];
+const deck=document.getElementById('deck');
+DECK.forEach((a,i)=>{ const el=document.createElement('span'); el.className='a'; el.textContent=a; el.style.animationDelay=(i*0.15)+'s'; deck.appendChild(el); });
+
+/* confetti */
+const COLORS=['#E58B8B','#E6D673','#94C97E','#7FB6D6','#9C8FD0','#E8A33D'];
+const cf=document.getElementById('confetti');
+for(let i=0;i<60;i++){ const it=document.createElement('i');
+  it.style.left=(Math.random()*100)+'%';
+  it.style.background=COLORS[i%COLORS.length];
+  it.style.animationDuration=(2.6+Math.random()*2.4)+'s';
+  it.style.animationDelay=(-Math.random()*4)+'s';
+  it.style.transform=`rotate(${Math.random()*360}deg)`;
+  cf.appendChild(it); }
+</script>
+</body>
+</html>

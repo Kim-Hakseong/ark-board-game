@@ -443,6 +443,16 @@ function TeacherStub({
         </>
       )}
 
+      {phase === "ended" && (
+        <button
+          type="button"
+          onClick={() => send({ type: "phase", cmd: "reset" })}
+          className="bg-ark-gold text-ink font-display text-xl py-4 rounded-2xl"
+        >
+          🔄 새 게임
+        </button>
+      )}
+
       {phase !== "ended" && (
         confirmEnd ? (
           <div className="grid grid-cols-2 gap-2">

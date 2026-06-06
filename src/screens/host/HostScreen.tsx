@@ -65,7 +65,12 @@ export function HostScreen() {
         </>
       )}
 
-      {state.phase === "ended" && <Results state={state} />}
+      {state.phase === "ended" && (
+        <Results
+          state={state}
+          onReset={() => apply({ type: "phase", cmd: "reset" })}
+        />
+      )}
     </div>
   );
 }

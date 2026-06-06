@@ -55,6 +55,14 @@ export function removePlayer(state: GameState, playerId: string): GameState {
   };
 }
 
+// 같은 방 코드/PIN을 유지한 채 lobby 상태로 리셋. 학생들은 profile 기반 자동 재입장.
+export function resetGame(state: GameState): GameState {
+  return {
+    ...initGame({ roomCode: state.roomCode, teacherPin: state.teacherPin }),
+    seq: state.seq + 1,
+  };
+}
+
 export function startGame(state: GameState): GameState {
   if (state.phase !== "lobby") return state;
   if (state.players.length < 2) return state;

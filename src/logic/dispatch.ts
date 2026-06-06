@@ -1,5 +1,5 @@
 import type { Action } from "../realtime/types";
-import { addPlayer, removePlayer, startGame } from "./state";
+import { addPlayer, removePlayer, resetGame, startGame } from "./state";
 import {
   advanceDay,
   closeQuiz,
@@ -72,6 +72,8 @@ export function dispatch(
           return advanceDay(state);
         case "end":
           return endGame(state);
+        case "reset":
+          return resetGame(state);
         default:
           return state;
       }

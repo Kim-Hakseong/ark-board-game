@@ -5,12 +5,13 @@ import type { GameState } from "../../logic/types";
 
 interface ResultsProps {
   state: GameState;
+  onReset?: () => void;
 }
 
 // 파스텔 무지개 (Design.md §3)
 const RAINBOW = ["#F8B6B6", "#F8D49B", "#F4E89A", "#B7E0AA", "#A8CFEA", "#C5B2E0"];
 
-export function Results({ state }: ResultsProps) {
+export function Results({ state, onReset }: ResultsProps) {
   const entries = computeResults(state);
 
   return (
@@ -22,7 +23,22 @@ export function Results({ state }: ResultsProps) {
         <div className="flex-1 grid grid-cols-[1fr_30rem] gap-8 p-12 items-center">
           <Deck entries={entries} />
           <div className="flex flex-col gap-3 overflow-y-auto pr-2">
-            <h1 className="font-display text-5xl text-ark-gold drop-shadow">결과</h1>
+            <div className="flex items-center justify-between">
+              <h1 className="font-display text-5xl text-ark-gold drop-shadow">결과</h1>
+              {onReset && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm("새 게임을 시작합니다. 점수가 초기화돼요. 진행할까요?")) {
+                      onReset();
+                    }
+                  }}
+                  className="px-5 py-3 rounded-2xl bg-white text-ink font-display text-lg shadow-lg border-2 border-ark-gold"
+                >
+                  🔄 새 게임
+                </button>
+              )}
+            </div>
             {entries.map((e, i) => (
               <RankCard key={e.playerId} entry={e} highlight={i < 3} />
             ))}

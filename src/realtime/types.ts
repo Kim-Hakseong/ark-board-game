@@ -14,7 +14,7 @@ export type Action =
   | { type: "confirm" } // EVENT 자동 처리 후 [확인]
   | { type: "closeQuiz" } // 타이머 만료
   | { type: "finalizeQuiz" } // 결과 모달 닫기
-  | { type: "phase"; cmd: "start" | "rain" | "nextDay" | "end" }
+  | { type: "phase"; cmd: "start" | "rain" | "nextDay" | "end" | "reset" }
   | { type: "resync"; playerId: string };
 
 export interface RealtimeAdapter {

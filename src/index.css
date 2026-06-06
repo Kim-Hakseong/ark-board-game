@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Design.md §3 — 컬러 시스템 */
+  --bg-cream: #FDF6EC;
+  --ink: #4A3B2A;
+
+  /* 보드 풍경 4구역 그라데이션 */
+  --field: #DDEBC8;
+  --bone: #F0E2C2;
+  --sand: #F5D9A8;
+  --peach: #F8CFAE;
+
+  /* 칸 종류 (fill / border) */
+  --word: #CDE4F2;
+  --word-edge: #5B8DB8;
+  --share: #FAE8B4;
+  --share-edge: #C9A227;
+  --mission: #F6CFC4;
+  --mission-edge: #C96A4E;
+  --event: #E3D4F0;
+  --event-edge: #8E6FB8;
+
+  /* 강조색 */
+  --ark-gold: #E8A33D;
+  --grace: #7FB069;
+
+  /* 비 페이즈 */
+  --rain: #8FA3BF;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-cream);
+  color: var(--ink);
+  font-family: "Pretendard", "Apple SD Gothic Neo", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

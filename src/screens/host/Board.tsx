@@ -1,3 +1,4 @@
+import { AnimatedDice } from "../../components/AnimatedDice";
 import { CELLS, type Cell, type CellKind } from "../../data/cells";
 import { getAnimal } from "../../data/animals";
 import type { GameState, Player } from "../../logic/types";
@@ -180,11 +181,17 @@ function StatusPanel({
         </div>
       )}
 
-      <div className="bg-cream rounded-2xl p-4 flex flex-col items-center">
-        <div className="text-xs opacity-60 font-display mb-1">주사위</div>
-        <div className="font-display text-6xl text-ink">
-          {state.lastDiceRoll ?? "—"}
-        </div>
+      <div className="bg-cream rounded-2xl p-4 flex flex-col items-center gap-2">
+        <div className="text-xs opacity-60 font-display">주사위</div>
+        <AnimatedDice
+          value={state.lastDiceRoll}
+          trigger={state.lastDiceRoll == null ? null : `${state.seq}-${state.lastDiceRoll}`}
+          size="lg"
+          durationMs={700}
+        />
+        {state.lastDiceRoll != null && (
+          <div className="font-display text-4xl text-ark-gold">{state.lastDiceRoll}</div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto">

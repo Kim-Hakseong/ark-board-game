@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { generatePin, generateRoomCode } from "../../lib/codes";
+import { sound } from "../../lib/sound";
+import { useSoundEffects } from "../../lib/useSoundEffects";
 import {
   loadHostActiveRoom,
   saveHostActiveRoom,
@@ -23,10 +25,30 @@ function getOrCreateActiveRoom(): HostActiveRoom {
 export function HostScreen() {
   const [room] = useState<HostActiveRoom>(() => getOrCreateActiveRoom());
   const { state, adapter, apply } = useHostGame(room);
+  const [muted, setMuted] = useState<boolean>(() => sound.isMuted);
+
+  useSoundEffects(state);
 
   useEffect(() => {
     document.title = `방주로 가는 길 — ${room.roomCode}`;
   }, [room.roomCode]);
+
+  // 첫 user gesture에 AudioContext unlock (Safari 정책).
+  useEffect(() => {
+    const handler = () => sound.unlock();
+    window.addEventListener("click", handler, { once: true });
+    window.addEventListener("keydown", handler, { once: true });
+    return () => {
+      window.removeEventListener("click", handler);
+      window.removeEventListener("keydown", handler);
+    };
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    sound.unlock();
+    const m = sound.toggle();
+    setMuted(m);
+  }, []);
 
   const joinUrl = useMemo(() => {
     if (typeof window === "undefined") return `/play?room=${room.roomCode}`;
@@ -42,6 +64,16 @@ export function HostScreen() {
           ⚠️ 로컬 mock 모드 ({adapter?.mockReason}). 실시간 동기화는 같은 브라우저 탭 사이만 동작합니다.
         </div>
       )}
+
+      {/* 음소거 토글 (우상단 고정) */}
+      <button
+        type="button"
+        onClick={toggleMute}
+        className="fixed top-3 right-3 z-50 w-12 h-12 rounded-full bg-white/80 backdrop-blur border-2 border-ink/10 shadow-lg text-2xl flex items-center justify-center"
+        title={muted ? "효과음 켜기" : "효과음 끄기"}
+      >
+        {muted ? "🔇" : "🔊"}
+      </button>
 
       {state.phase === "lobby" && (
         <Lobby

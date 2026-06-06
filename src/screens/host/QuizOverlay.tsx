@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getAnimal } from "../../data/animals";
 import { getCell } from "../../data/cells";
+import { sound } from "../../lib/sound";
 import type { GameState } from "../../logic/types";
 
 interface QuizOverlayProps {
@@ -81,9 +82,15 @@ function TimerRing({ deadlineMs }: { deadlineMs: number }) {
   const [remaining, setRemaining] = useState(() =>
     Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000)),
   );
+  const lastTick = useRef<number>(-1);
   useEffect(() => {
     const id = window.setInterval(() => {
-      setRemaining(Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000)));
+      const r = Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000));
+      setRemaining(r);
+      if (r > 0 && r <= 5 && r !== lastTick.current) {
+        lastTick.current = r;
+        sound.tick();
+      }
     }, 250);
     return () => window.clearInterval(id);
   }, [deadlineMs]);
